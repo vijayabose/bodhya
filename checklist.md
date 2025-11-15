@@ -1,7 +1,7 @@
 # Bodhya Implementation Checklist
 
 **Last Updated**: 2025-11-15
-**Status**: Phase 1 Complete - 46 tests passing, all quality gates green
+**Status**: Phase 2 Complete - 82 tests passing, all quality gates green
 
 ---
 
@@ -27,23 +27,24 @@
 
 ---
 
-## Phase 2: Model Registry & Manifest ⬜
+## Phase 2: Model Registry & Manifest ✅
 
 **Goal**: Enable model discovery and configuration parsing
 
-- [ ] Create sample `models.yaml` manifest following the spec
-- [ ] Implement **`model-registry` crate** with TDD:
-  - [ ] `manifest.rs` - Parse and validate `models.yaml`
-  - [ ] `registry.rs` - Lookup models by (role, domain, engagement)
-  - [ ] `local_mistral.rs` - Stub implementation of local ModelBackend (returns mock responses initially)
-  - [ ] `remote_stub.rs` - Placeholder for future remote backends
-- [ ] Write integration tests matching Gherkin scenarios from `bodhya_gherkin_test_cases.md`
+- [x] Create sample `models.yaml` manifest following the spec
+- [x] Implement **`model-registry` crate** with TDD:
+  - [x] `manifest.rs` - Parse and validate `models.yaml`
+  - [x] `registry.rs` - Lookup models by (role, domain, engagement)
+  - [x] `local_mistral.rs` - Stub implementation of local ModelBackend (returns mock responses initially)
+  - [x] `remote_stub.rs` - Placeholder for future remote backends
+- [x] Write integration tests matching Gherkin scenarios from `bodhya_gherkin_test_cases.md`
 
-**Deliverables**:
-- Model manifest parser with validation
-- Registry that maps roles to model configs
-- Unit tests for all parsing/lookup logic
-- Stub ModelBackend for testing
+**Deliverables**: ✅
+- Model manifest parser with validation (20 tests)
+- Registry that maps roles to model configs (12 tests)
+- Stub ModelBackend for local and remote (8 tests)
+- Integration tests for full workflow (4 tests)
+- Committed and pushed to `claude/plan-and-implement-01X8umSH1nPwnW9P3799Ctrh`
 
 ---
 
