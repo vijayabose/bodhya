@@ -1,7 +1,7 @@
 # Bodhya Implementation Checklist
 
 **Last Updated**: 2025-11-15
-**Status**: Phase 2 Complete - 82 tests passing, all quality gates green
+**Status**: Phase 3 Complete - 120 tests passing, all quality gates green
 
 ---
 
@@ -48,24 +48,26 @@
 
 ---
 
-## Phase 3: Controller & Routing Logic ⬜
+## Phase 3: Controller & Routing Logic ✅
 
 **Goal**: Implement intelligent agent selection and task orchestration
 
-- [ ] Implement **`controller` crate** with TDD:
-  - [ ] `routing.rs` - Capability-based agent selection (matches task description to agent capabilities)
-  - [ ] `engagement.rs` - Engagement mode handling (v1: enforce minimum/local-only)
-  - [ ] `orchestrator.rs` - Main task execution pipeline with logging
-- [ ] Write unit tests for:
-  - [ ] Code task routing to code agent
-  - [ ] Mail task routing to mail agent
-  - [ ] Unknown task handling
-  - [ ] Disabled agent handling
+- [x] Implement **`controller` crate** with TDD:
+  - [x] `routing.rs` - Capability-based agent selection (matches task description to agent capabilities)
+  - [x] `engagement.rs` - Engagement mode handling (v1: enforce minimum/local-only)
+  - [x] `orchestrator.rs` - Main task execution pipeline with logging
+- [x] Write unit tests for:
+  - [x] Code task routing to code agent
+  - [x] Mail task routing to mail agent
+  - [x] Unknown task handling
+  - [x] Disabled agent handling
 
-**Deliverables**:
-- Controller that routes tasks to agents based on capabilities
+**Deliverables**: ✅
+- Controller that routes tasks to agents based on capabilities (38 tests)
 - Engagement mode enforcement (local-only in v1)
 - Comprehensive routing tests matching Gherkin specs
+- Integration tests demonstrating full task execution workflow
+- Committed and pushed to `claude/plan-and-implement-01X8umSH1nPwnW9P3799Ctrh`
 
 ---
 
@@ -305,5 +307,6 @@ Before considering implementation complete, verify:
 
 Legend: ⬜ Not Started | 🔄 In Progress | ✅ Complete
 
-**Current Phase**: Phase 1 - Foundation & Workspace Setup
+**Current Phase**: Phase 3 Complete - Controller & Routing Logic
+**Next Phase**: Phase 4 - CLI Foundation
 **Last Updated**: 2025-11-15
