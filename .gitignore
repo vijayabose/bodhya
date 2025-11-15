@@ -1,0 +1,24 @@
+# Rust/Cargo build artifacts
+/target/
+**/target/
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Bodhya runtime
+.bodhya/models/
+.bodhya/cache/
+.bodhya/logs/
+*.log
+
+# Temporary files
+*.tmp

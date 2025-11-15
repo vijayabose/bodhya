@@ -1,0 +1,31 @@
+[package]
+name = "bodhya-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "bodhya"
+path = "src/main.rs"
+
+[dependencies]
+bodhya-core = { path = "../core" }
+bodhya-controller = { path = "../controller" }
+bodhya-model-registry = { path = "../model-registry" }
+bodhya-agent-code = { path = "../agent-code" }
+bodhya-agent-mail = { path = "../agent-mail" }
+bodhya-storage = { path = "../storage" }
+tokio.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_yaml.workspace = true
+anyhow.workspace = true
+home.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
