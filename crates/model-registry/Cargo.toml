@@ -1,0 +1,25 @@
+[package]
+name = "bodhya-model-registry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+bodhya-core = { path = "../core" }
+tokio.workspace = true
+async-trait.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+reqwest.workspace = true
+home.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+mockall.workspace = true

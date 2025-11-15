@@ -1,0 +1,23 @@
+[package]
+name = "bodhya-agent-code"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+bodhya-core = { path = "../core" }
+bodhya-tools-mcp = { path = "../tools-mcp" }
+tokio.workspace = true
+async-trait.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+mockall.workspace = true
+tempfile.workspace = true

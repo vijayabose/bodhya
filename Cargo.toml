@@ -1,0 +1,68 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/core",
+    "crates/controller",
+    "crates/model-registry",
+    "crates/tools-mcp",
+    "crates/agent-code",
+    "crates/agent-mail",
+    "crates/storage",
+    "crates/cli",
+    "crates/api-server",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+authors = ["Bodhya Contributors"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/vijayabose/bodhya"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+async-trait = "0.1"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# HTTP client (for model downloads)
+reqwest = { version = "0.11", features = ["stream"] }
+
+# Database (optional)
+rusqlite = { version = "0.30", features = ["bundled"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Testing
+mockall = "0.12"
+tempfile = "3.8"
+
+# API server (optional)
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Utilities
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+home = "0.5"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
