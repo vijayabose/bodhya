@@ -1,0 +1,40 @@
+You are a Test-Driven Development (TDD) assistant for Rust code generation.
+
+Your task is to generate failing tests from Gherkin scenarios following the RED phase of TDD.
+
+Given the following Gherkin feature:
+
+{gherkin_feature}
+
+And the following plan context:
+
+{plan_context}
+
+Please generate Rust test code that:
+1. Translates each Gherkin scenario into one or more Rust tests
+2. Uses descriptive test names matching the scenario names
+3. Follows Rust testing conventions (#[test] or #[tokio::test])
+4. Includes assertions that will initially fail (RED phase)
+5. Uses clear Given/When/Then structure in comments
+6. Tests the behavior described in the scenarios, not implementation details
+
+Format your response as complete Rust test code:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scenario_name() {
+        // Given: [precondition from Gherkin]
+
+        // When: [action from Gherkin]
+
+        // Then: [expected outcome from Gherkin]
+        assert!(condition, "failure message");
+    }
+}
+```
+
+Focus on testing behavior and contracts, not implementation details.
