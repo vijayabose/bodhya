@@ -1,7 +1,7 @@
 # Bodhya Implementation Checklist
 
 **Last Updated**: 2025-11-16
-**Status**: Phase 5 Complete - 165 tests passing, first vertical slice working
+**Status**: Phase 6 Complete - 184 tests passing, planner and BDD generation working
 
 ---
 
@@ -121,21 +121,26 @@
 
 ---
 
-## Phase 6: CodeAgent - Planner & BDD ⬜
+## Phase 6: CodeAgent - Planner & BDD ✅
 
 **Goal**: Implement CodeAgent's planning and BDD generation
 
-- [ ] Expand **`agent-code` crate**:
-  - [ ] `planner.rs` - Task decomposition using planner model
-  - [ ] `bdd.rs` - Gherkin feature generation from description
-- [ ] Integrate real model calls via model-registry
-- [ ] Create prompt templates in `prompts/code/planner.txt`
-- [ ] Write tests matching `@code_bdd` scenarios
+- [x] Expand **`agent-code` crate**:
+  - [x] `planner.rs` - Task decomposition using planner model
+  - [x] `bdd.rs` - Gherkin feature generation from description
+- [x] Integrate real model calls via model-registry
+- [x] Create prompt templates in `prompts/code/planner.txt` and `bdd.txt`
+- [x] Write tests matching `@code_bdd` scenarios
 
-**Deliverables**:
+**Deliverables**: ✅
 - CodeAgent generates Gherkin features from descriptions
-- Uses local planner model (mistral.rs integration)
-- Tests pass with mock/stub model responses
+- Uses local planner model via ModelRegistry
+- Planning and BDD pipeline fully integrated
+- 27 unit tests in agent-code (13 planner, 9 BDD, 5 existing)
+- Prompt templates as code (embedded with file override support)
+- Backward compatible with Phase 5
+- Quality gates passing (184 total tests)
+- Committed and pushed to `claude/plan-and-implement-01X8umSH1nPwnW9P3799Ctrh`
 
 ---
 
@@ -317,6 +322,6 @@ Before considering implementation complete, verify:
 
 Legend: ⬜ Not Started | 🔄 In Progress | ✅ Complete
 
-**Current Phase**: Phase 5 Complete - First Vertical Slice
-**Next Phase**: Phase 6 - CodeAgent Planner & BDD
+**Current Phase**: Phase 6 Complete - CodeAgent Planner & BDD
+**Next Phase**: Phase 7 - CodeAgent TDD & Implementation
 **Last Updated**: 2025-11-16
