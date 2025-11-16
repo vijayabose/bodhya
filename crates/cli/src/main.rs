@@ -4,11 +4,12 @@
 /// - Initialization: `bodhya init`
 /// - Model management: `bodhya models list/install/remove`
 /// - Task execution: `bodhya run`
+/// - History: `bodhya history`
 use clap::{Parser, Subcommand};
 use std::process;
 
 use bodhya_cli::config_templates::{ConfigTemplate, Profile};
-use bodhya_cli::{init_cmd, models_cmd, run_cmd};
+use bodhya_cli::{history_cmd, init_cmd, models_cmd, run_cmd};
 
 #[derive(Parser)]
 #[command(name = "bodhya")]
@@ -50,6 +51,10 @@ enum Commands {
         #[arg(required = true)]
         task: String,
     },
+
+    /// View execution history and metrics
+    #[command(subcommand)]
+    History(HistoryCommands),
 }
 
 #[derive(Subcommand)]
@@ -67,6 +72,22 @@ enum ModelsCommands {
     Remove {
         /// Model ID to remove
         model_id: String,
+    },
+}
+
+#[derive(Subcommand)]
+enum HistoryCommands {
+    /// Show recent task execution history
+    Show {
+        /// Number of sessions to show
+        #[arg(short, long, default_value = "10")]
+        limit: usize,
+    },
+
+    /// Show statistics for a domain
+    Stats {
+        /// Domain to show stats for (e.g., "code", "mail")
+        domain: String,
     },
 }
 
@@ -103,6 +124,10 @@ async fn main() {
             ModelsCommands::Remove { model_id } => models_cmd::remove_model(&model_id),
         },
         Commands::Run { domain, task } => run_cmd::run_task(domain, task).await,
+        Commands::History(history_cmd) => match history_cmd {
+            HistoryCommands::Show { limit } => history_cmd::show_history(limit),
+            HistoryCommands::Stats { domain } => history_cmd::show_stats(&domain),
+        },
     };
 
     // Handle errors
