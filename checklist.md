@@ -1,7 +1,7 @@
 # Bodhya Implementation Checklist
 
 **Last Updated**: 2025-11-16
-**Status**: Phase 7 Complete - 217 tests passing, full TDD pipeline working
+**Status**: Phase 8 Complete - 264 tests passing, MailAgent with draft & refine pipeline working
 
 ---
 
@@ -171,21 +171,28 @@
 
 ---
 
-## Phase 8: MailAgent ⬜
+## Phase 8: MailAgent ✅
 
 **Goal**: Implement MailAgent for email drafting and refinement
 
-- [ ] Implement **`agent-mail` crate**:
-  - [ ] `draft.rs` - Initial email draft generation
-  - [ ] `refine.rs` - Tone and clarity improvement
-  - [ ] `classify.rs` - Stub for future policy/classification
-- [ ] Create prompt templates for mail agent roles
-- [ ] Write tests matching `@mail_draft` and `@mail_review` scenarios
+- [x] Implement **`agent-mail` crate**:
+  - [x] `draft.rs` - Initial email draft generation
+  - [x] `refine.rs` - Tone and clarity improvement
+  - [x] `classify.rs` - Stub for future policy/classification
+- [x] Create prompt templates for mail agent roles
+- [x] Write tests matching `@mail_draft` and `@mail_review` scenarios
 
-**Deliverables**:
-- Working MailAgent with draft and refine capabilities
-- Tests demonstrating email generation and improvement
-- Integration with model registry
+**Deliverables**: ✅
+- Working MailAgent with draft and refine capabilities (30 unit tests)
+- Email drafting pipeline: DraftGenerator → EmailRefiner
+- RefinementGoal support (Clarity, Tone, Conciseness, All)
+- Integration with ModelRegistry using ModelRole::Writer
+- Graceful fallback to static emails when no registry
+- Prompt templates (draft.txt, refine.txt) with embedded defaults
+- Parser handles both structured and unstructured email formats
+- EmailClassifier stub for future policy checking
+- Quality gates passing (264 total tests)
+- Committed and pushed to `claude/plan-and-implement-01X8umSH1nPwnW9P3799Ctrh`
 
 ---
 
@@ -328,6 +335,6 @@ Before considering implementation complete, verify:
 
 Legend: ⬜ Not Started | 🔄 In Progress | ✅ Complete
 
-**Current Phase**: Phase 7 Complete - CodeAgent TDD & Implementation
-**Next Phase**: Phase 8 - MailAgent
+**Current Phase**: Phase 8 Complete - MailAgent with Draft & Refine
+**Next Phase**: Phase 9 - Tool/MCP Integration
 **Last Updated**: 2025-11-16
