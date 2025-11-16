@@ -2,10 +2,12 @@
 ///
 /// This crate provides the central controller agent for task routing,
 /// engagement mode management, and orchestration.
+pub use controller::Controller;
 pub use engagement::{EngagementManager, EngagementOperation, EngagementStrategy};
 pub use orchestrator::TaskOrchestrator;
 pub use routing::AgentRouter;
 
+pub mod controller;
 pub mod engagement;
 pub mod orchestrator;
 pub mod routing;

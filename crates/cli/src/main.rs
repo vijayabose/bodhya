@@ -9,7 +9,7 @@ use clap::{Parser, Subcommand};
 use std::process;
 
 use bodhya_cli::config_templates::{ConfigTemplate, Profile};
-use bodhya_cli::{history_cmd, init_cmd, models_cmd, run_cmd};
+use bodhya_cli::{history_cmd, init_cmd, models_cmd, run_cmd, serve_cmd};
 
 #[derive(Parser)]
 #[command(name = "bodhya")]
@@ -55,6 +55,17 @@ enum Commands {
     /// View execution history and metrics
     #[command(subcommand)]
     History(HistoryCommands),
+
+    /// Start API server
+    Serve {
+        /// Port to listen on
+        #[arg(short, long, default_value = "3000")]
+        port: u16,
+
+        /// Host to bind to
+        #[arg(long, default_value = "127.0.0.1")]
+        host: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -128,6 +139,7 @@ async fn main() {
             HistoryCommands::Show { limit } => history_cmd::show_history(limit),
             HistoryCommands::Stats { domain } => history_cmd::show_stats(&domain),
         },
+        Commands::Serve { port, host } => serve_cmd::start_server(&host, port).await,
     };
 
     // Handle errors
