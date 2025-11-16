@@ -1,9 +1,9 @@
 # Bodhya Tool Integration - Quick Reference Checklist
 
-**Version**: 1.0
+**Version**: 1.1
 **Status**: Planning Phase
 **Target**: v1.1 Release
-**Duration**: 6 weeks (4 phases)
+**Duration**: 6-9 weeks (4 phases + optional MCP extensibility)
 
 ---
 
@@ -150,7 +150,112 @@
 
 ---
 
-## Phase 3: Agentic Execution Loop (Week 5)
+## Phase 2.5: MCP Server Extensibility (Optional - Week 5)
+
+> **Note**: This phase is optional and can be done in parallel with Phase 3, or deferred to v1.2.
+> It enables users to extend Bodhya with external tools via CLI without code changes.
+
+### Configuration System
+
+**Core Config Updates** (`crates/core/`)
+- [ ] Add `ToolsConfig` struct to `src/config.rs`
+- [ ] Add `builtin: Vec<String>` field
+- [ ] Add `mcp_servers: Vec<McpServerConfig>` field
+- [ ] Add `ToolsConfig` to `AppConfig`
+- [ ] Enhance `McpServerConfig` with:
+  - [ ] `enabled: bool` field
+  - [ ] `headers: Option<HashMap<String, String>>` for HTTP
+  - [ ] Support for environment variable expansion
+- [ ] Write config serialization tests
+- [ ] Update default config template
+
+### Full MCP Client Implementation
+
+**StdioMcpClient** (`crates/tools-mcp/`)
+- [ ] Create enhanced `src/mcp_client.rs`
+- [ ] Implement JSON-RPC 2.0 protocol
+- [ ] Add process spawning with stdin/stdout
+- [ ] Implement `initialize` request
+- [ ] Implement `tools/list` for discovery
+- [ ] Implement `tools/call` for execution
+- [ ] Add environment variable expansion (`${VAR}`)
+- [ ] Add connection management
+- [ ] Add error handling and retries
+- [ ] Write comprehensive tests
+- [ ] Test with mock MCP server
+
+**HttpMcpClient** (Optional)
+- [ ] Create `src/mcp_client_http.rs`
+- [ ] Implement HTTP-based MCP protocol
+- [ ] Add header support
+- [ ] Add authentication
+- [ ] Write tests
+
+### CLI Tool Management Commands
+
+**Tools Command Module** (`crates/cli/`)
+- [ ] Create `src/tools_cmd.rs`
+- [ ] Define `ToolsCommand` enum with subcommands:
+  - [ ] `List { mcp: bool }` - list tools
+  - [ ] `AddMcp { ... }` - add MCP server
+  - [ ] `RemoveMcp { name }` - remove server
+  - [ ] `ToggleMcp { name, enable }` - enable/disable
+  - [ ] `ListMcp` - show configured servers
+  - [ ] `TestMcp { name }` - test connection
+- [ ] Implement `list_tools()` function
+- [ ] Implement `add_mcp_server()` function
+- [ ] Implement `remove_mcp_server()` function
+- [ ] Implement `toggle_mcp_server()` function
+- [ ] Implement `list_mcp_servers()` function
+- [ ] Implement `test_mcp_server()` function
+- [ ] Add to main CLI router in `main.rs`
+- [ ] Write CLI tests
+
+### Integration with Tool System
+
+**ToolRegistry MCP Loading** (`crates/tools-mcp/`)
+- [ ] Add `load_mcp_servers()` method to `ToolRegistry`
+- [ ] Connect to each enabled MCP server from config
+- [ ] Discover tools from each server
+- [ ] Wrap MCP tools to match `Tool` trait
+- [ ] Register MCP tools in registry
+- [ ] Add error handling for failed connections
+- [ ] Write integration tests
+
+**Controller Integration** (`crates/controller/`)
+- [ ] Load MCP servers when creating `ToolRegistry`
+- [ ] Pass MCP tools to `AgentContext`
+- [ ] Add MCP connection status to metrics
+- [ ] Handle MCP server failures gracefully
+
+### Testing & Documentation
+
+**MCP Integration Tests**
+- [ ] Create `tests/integration/mcp_integration_test.rs`
+- [ ] Test MCP server connection
+- [ ] Test tool discovery
+- [ ] Test tool execution via MCP
+- [ ] Test with real MCP server (filesystem)
+- [ ] Test error handling
+- [ ] Test enable/disable workflow
+
+**Documentation**
+- [ ] Create MCP configuration guide
+- [ ] Document available MCP servers
+- [ ] Add troubleshooting section
+- [ ] Add examples to README
+- [ ] Update user guide with MCP workflows
+
+**Example MCP Configurations**
+- [ ] Add example for GitHub MCP server
+- [ ] Add example for filesystem MCP server
+- [ ] Add example for Brave Search MCP server
+- [ ] Add example for custom HTTP server
+- [ ] Document environment variable usage
+
+---
+
+## Phase 3: Agentic Execution Loop (Week 5 or 6)
 
 **Executor Implementation** (`crates/agent-code/`)
 - [ ] Create `src/executor.rs`
@@ -204,7 +309,7 @@
 
 ---
 
-## Phase 4: Polish & Documentation (Week 6)
+## Phase 4: Polish & Documentation (Week 6-7)
 
 **Documentation Updates**
 - [ ] Update `bodhya_system_design.md` (already started)
@@ -266,6 +371,8 @@ regex = "1.10"        # SearchTool - pattern matching
 ignore = "0.4"        # SearchTool - gitignore-aware traversal
 git2 = "0.18"         # GitTool - libgit2 bindings
 similar = "2.4"       # EditTool - diff/patch algorithms
+shell-words = "1.1"   # MCP - command parsing
+reqwest = "0.11"      # MCP - HTTP client (for HttpMcpClient)
 ```
 
 ---
@@ -295,6 +402,8 @@ similar = "2.4"       # EditTool - diff/patch algorithms
 - [ ] EditTool functional
 - [ ] SearchTool functional
 - [ ] GitTool functional
+- [ ] MCP server integration working (optional)
+- [ ] External tools loadable via CLI (optional)
 - [ ] End-to-end workflows complete
 
 ### Quality
@@ -327,27 +436,35 @@ similar = "2.4"       # EditTool - diff/patch algorithms
 
 ## File Creation Summary
 
-**New Files: 25+**
+**New Files: 30+**
 - `crates/agent-code/src/tools.rs`
 - `crates/agent-code/src/executor.rs`
 - `crates/tools-mcp/src/edit_tool.rs`
 - `crates/tools-mcp/src/search_tool.rs`
 - `crates/tools-mcp/src/git_tool.rs`
+- `crates/cli/src/tools_cmd.rs` (MCP management)
 - `prompts/code/coder_with_tools.txt`
 - `prompts/code/error_analyzer.txt`
 - `documents/bodhya_tool_integration_plan.md` ✓
 - `documents/bodhya_tool_usage_guide.md`
+- `documents/tool_extensibility_design.md` ✓
 - `documents/TOOL_INTEGRATION_CHECKLIST.md` ✓
+- `documents/IMPLEMENTATION_SUMMARY.md` ✓
 - `examples/` directories and files
+- `examples/mcp_servers/` (MCP configuration examples)
 - `tests/integration/` test files
+- `tests/integration/mcp_integration_test.rs`
 
-**Modified Files: 15+**
+**Modified Files: 20+**
 - `crates/core/src/agent.rs`
-- `crates/core/src/config.rs`
+- `crates/core/src/config.rs` (add ToolsConfig)
+- `crates/core/src/tool.rs` (enhance McpServerConfig)
 - `crates/controller/src/controller.rs`
 - `crates/controller/src/orchestrator.rs`
 - `crates/agent-code/src/lib.rs`
 - `crates/tools-mcp/src/lib.rs`
+- `crates/tools-mcp/src/mcp_client.rs` (full implementation)
+- `crates/cli/src/main.rs` (add tools command)
 - `crates/cli/src/run_cmd.rs`
 - `documents/bodhya_system_design.md` ✓
 - `documents/bodhya_code_design.md`
@@ -363,14 +480,40 @@ similar = "2.4"       # EditTool - diff/patch algorithms
 - ✅ Gap identification
 - ✅ Comprehensive plan created
 - ✅ System design updated (partial)
-- ✅ This checklist created
+- ✅ Tool integration checklist created
+- ✅ Tool extensibility design created
+- ✅ Implementation summary created
 
 **Next Steps:**
 1. Review plan with stakeholders
-2. Create feature branch: `feature/tool-integration`
-3. Begin Phase 1, Week 1: Core Types & Infrastructure
-4. Set up project tracking
-5. Assign owners for each phase
+2. Decide on MCP integration priority:
+   - Include in v1.1? (adds 1-3 weeks)
+   - Defer to v1.2?
+   - Implement in parallel?
+3. Create feature branch: `feature/tool-integration`
+4. Begin Phase 1, Week 1: Core Types & Infrastructure
+5. Set up project tracking
+6. Assign owners for each phase
+
+## Implementation Options
+
+### Option A: Full Feature Set (6-9 weeks)
+Include all phases including MCP server extensibility
+- **Timeline**: 9 weeks
+- **Scope**: Phases 1-4 + Phase 2.5 (MCP)
+- **Outcome**: Complete tool integration with extensibility
+
+### Option B: Core Features (6 weeks)
+Defer MCP to v1.2, focus on core tool integration
+- **Timeline**: 6 weeks
+- **Scope**: Phases 1-4 only
+- **Outcome**: Tool integration + agentic loop, defer MCP
+
+### Option C: Parallel Track (6-7 weeks)
+Implement MCP in parallel with Phase 3
+- **Timeline**: 7 weeks
+- **Scope**: Phases 1-4, with MCP during weeks 5-6
+- **Outcome**: Core + MCP, potentially faster completion
 
 ---
 
