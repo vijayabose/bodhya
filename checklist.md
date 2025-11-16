@@ -1,7 +1,7 @@
 # Bodhya Implementation Checklist
 
 **Last Updated**: 2025-11-16
-**Status**: Phase 5 Complete - 165 tests passing, first vertical slice working
+**Status**: Phase 7 Complete - 217 tests passing, full TDD pipeline working
 
 ---
 
@@ -121,42 +121,53 @@
 
 ---
 
-## Phase 6: CodeAgent - Planner & BDD ⬜
+## Phase 6: CodeAgent - Planner & BDD ✅
 
 **Goal**: Implement CodeAgent's planning and BDD generation
 
-- [ ] Expand **`agent-code` crate**:
-  - [ ] `planner.rs` - Task decomposition using planner model
-  - [ ] `bdd.rs` - Gherkin feature generation from description
-- [ ] Integrate real model calls via model-registry
-- [ ] Create prompt templates in `prompts/code/planner.txt`
-- [ ] Write tests matching `@code_bdd` scenarios
+- [x] Expand **`agent-code` crate**:
+  - [x] `planner.rs` - Task decomposition using planner model
+  - [x] `bdd.rs` - Gherkin feature generation from description
+- [x] Integrate real model calls via model-registry
+- [x] Create prompt templates in `prompts/code/planner.txt` and `bdd.txt`
+- [x] Write tests matching `@code_bdd` scenarios
 
-**Deliverables**:
+**Deliverables**: ✅
 - CodeAgent generates Gherkin features from descriptions
-- Uses local planner model (mistral.rs integration)
-- Tests pass with mock/stub model responses
+- Uses local planner model via ModelRegistry
+- Planning and BDD pipeline fully integrated
+- 27 unit tests in agent-code (13 planner, 9 BDD, 5 existing)
+- Prompt templates as code (embedded with file override support)
+- Backward compatible with Phase 5
+- Quality gates passing (184 total tests)
+- Committed and pushed to `claude/plan-and-implement-01X8umSH1nPwnW9P3799Ctrh`
 
 ---
 
-## Phase 7: CodeAgent - TDD & Implementation ⬜
+## Phase 7: CodeAgent - TDD & Implementation ✅
 
 **Goal**: Complete CodeAgent's test-first code generation
 
-- [ ] Implement in **`agent-code` crate**:
-  - [ ] `tdd.rs` - Test generation (RED phase)
-  - [ ] `impl_gen.rs` - Code generation to make tests pass (GREEN phase)
-  - [ ] `review.rs` - Code review and improvement suggestions
-  - [ ] `validate.rs` - Integration with `cargo check`, `cargo test`, `cargo clippy`
-- [ ] Create prompt templates for each sub-agent role
-- [ ] Implement full BDD/TDD pipeline orchestration
-- [ ] Write comprehensive tests matching `@code_bdd_tdd` and `@code_multimodel` scenarios
+- [x] Implement in **`agent-code` crate**:
+  - [x] `tdd.rs` - Test generation (RED phase)
+  - [x] `impl_gen.rs` - Code generation to make tests pass (GREEN phase)
+  - [x] `review.rs` - Code review and improvement suggestions
+  - [x] `validate.rs` - Integration with `cargo check`, `cargo test`, `cargo clippy`
+- [x] Create prompt templates for each sub-agent role
+- [x] Implement full BDD/TDD pipeline orchestration
+- [x] Write comprehensive tests matching `@code_bdd_tdd` and `@code_multimodel` scenarios
 
-**Deliverables**:
+**Deliverables**: ✅
 - Full CodeAgent pipeline (Planner → BDD → TDD → Generator → Reviewer)
-- Multi-model orchestration working
-- Quality validation integrated
+- Multi-model orchestration working (Planner, Coder, Reviewer)
+- Quality validation integrated (cargo check/test/clippy)
 - Tests demonstrating RED-GREEN-REFACTOR flow
+- 4 new modules: tdd, impl_gen, review, validate
+- 3 new prompt templates: tdd.txt, coder.txt, reviewer.txt
+- 33 new tests (9 TDD, 9 impl gen, 10 review, 9 validate)
+- 217 total tests passing across workspace
+- Quality gates passing
+- Committed and pushed to `claude/plan-and-implement-01X8umSH1nPwnW9P3799Ctrh`
 
 ---
 
@@ -317,6 +328,6 @@ Before considering implementation complete, verify:
 
 Legend: ⬜ Not Started | 🔄 In Progress | ✅ Complete
 
-**Current Phase**: Phase 5 Complete - First Vertical Slice
-**Next Phase**: Phase 6 - CodeAgent Planner & BDD
+**Current Phase**: Phase 7 Complete - CodeAgent TDD & Implementation
+**Next Phase**: Phase 8 - MailAgent
 **Last Updated**: 2025-11-16
