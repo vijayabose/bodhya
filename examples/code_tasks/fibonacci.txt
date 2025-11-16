@@ -1,0 +1,19 @@
+Create a function to calculate the nth Fibonacci number.
+
+Requirements:
+- Use dynamic programming for O(n) time complexity
+- Handle edge cases: n = 0, n = 1, negative numbers
+- Support values up to i64::MAX without overflow
+- Return Result<i64, String> to handle errors
+- Include comprehensive unit tests covering:
+  * Base cases (0, 1)
+  * Small numbers (2-10)
+  * Larger numbers (20, 30)
+  * Negative input (should return error)
+- Add rustdoc comments with examples
+- Implement iterative approach (not recursive)
+
+Expected function signature:
+pub fn fibonacci(n: i64) -> Result<i64, String>
+
+The function should return an error for negative inputs with a clear message.

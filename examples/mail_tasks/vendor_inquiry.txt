@@ -1,0 +1,55 @@
+Compose an email to a potential cloud infrastructure vendor requesting pricing information and technical details.
+
+Context:
+- Company: CloudScale Solutions
+- Your company: Mid-size SaaS company with 150 employees
+- Current situation: Evaluating migration from current provider
+- Scale: ~500 servers, 2PB storage, high network throughput
+- Decision timeline: Need to decide within 2 months
+- Budget: $50K-$100K monthly range
+
+Purpose:
+- Request detailed pricing proposal
+- Get technical specifications
+- Understand support options
+- Schedule a technical demonstration
+- Begin vendor evaluation process
+
+Requirements to ask about:
+1. Pricing structure (compute, storage, network, support)
+2. Available instance types and configurations
+3. Storage options (SSD, HDD, object storage)
+4. Network performance and bandwidth
+5. High availability and disaster recovery features
+6. Support levels and SLAs
+7. Migration assistance services
+8. Compliance certifications (SOC 2, ISO 27001, GDPR)
+
+Tone: Professional, businesslike, but collaborative
+
+Key points to include:
+1. Introduce yourself and your company briefly
+2. Explain why you're reaching out (evaluation process)
+3. Provide context about your current scale
+4. List specific information needed
+5. Mention decision timeline
+6. Request technical demo
+7. Ask about next steps
+8. Provide your contact information
+
+Structure:
+- Subject: Clear and specific
+- Greeting: Professional
+- Introduction: Who you are and company overview
+- Current situation: Brief context
+- Information needed: Organized list
+- Timeline: Decision timeframe
+- Next steps: Demo request
+- Closing: Professional and action-oriented
+
+Additional notes:
+- Be clear about scale to get accurate pricing
+- Show you're a serious potential customer
+- Keep it professional and to the point (250-300 words)
+- Make it easy for them to respond with the information
+- Include specific technical requirements

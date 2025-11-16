@@ -1,0 +1,48 @@
+Create a CSV parser that reads CSV files and returns structured data.
+
+Requirements:
+- Define a CsvParser struct that handles CSV parsing
+- Support custom delimiters (comma, tab, semicolon)
+- Handle quoted fields with embedded delimiters
+- Support header row parsing
+- Implement the following methods:
+  * new() - create parser with default settings (comma delimiter)
+  * with_delimiter(delimiter: char) - set custom delimiter
+  * with_headers(has_headers: bool) - specify if first row is headers
+  * parse_file(path: &str) -> Result<CsvData, Error> - parse from file
+  * parse_string(content: &str) -> Result<CsvData, Error> - parse from string
+
+Data structure:
+- Define CsvData struct containing:
+  * headers: Option<Vec<String>>
+  * rows: Vec<Vec<String>>
+
+Error handling:
+- Return detailed errors for:
+  * File not found
+  * Invalid UTF-8
+  * Malformed CSV (unclosed quotes, inconsistent column counts)
+- Use Result type with custom error enum
+
+Additional requirements:
+- Handle edge cases:
+  * Empty files
+  * Files with only headers
+  * Lines with different column counts
+  * Quoted fields with newlines
+  * Escaped quotes within quoted fields
+- Include comprehensive unit tests
+- Add integration tests with sample CSV files
+- Provide examples in documentation
+- Consider performance for large files (streaming if beneficial)
+
+Expected usage:
+```rust
+let parser = CsvParser::new()
+    .with_delimiter(',')
+    .with_headers(true);
+
+let data = parser.parse_file("data.csv")?;
+println!("Headers: {:?}", data.headers);
+println!("Row count: {}", data.rows.len());
+```

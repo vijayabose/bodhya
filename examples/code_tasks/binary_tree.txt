@@ -1,0 +1,28 @@
+Implement a binary search tree (BST) with insert, search, and delete operations.
+
+Requirements:
+- Define a Node struct with value, left, and right children
+- Implement a BinarySearchTree struct with root node
+- Support generic types that implement Ord trait
+- Implement the following methods:
+  * new() - create empty tree
+  * insert(value: T) - insert a value
+  * search(value: &T) -> bool - check if value exists
+  * delete(value: &T) -> bool - remove value, return true if found
+  * in_order_traversal() -> Vec<T> - return sorted values
+
+Additional requirements:
+- Handle duplicate values (ignore subsequent insertions)
+- Properly handle tree balancing during delete
+- Include comprehensive unit tests for:
+  * Empty tree operations
+  * Single node operations
+  * Complex tree operations
+  * Edge cases (deleting root, leaf nodes, nodes with one/two children)
+- Add documentation for all public methods
+- Consider using Box<Node<T>> for heap allocation
+
+Performance expectations:
+- Insert: O(log n) average case
+- Search: O(log n) average case
+- Delete: O(log n) average case
