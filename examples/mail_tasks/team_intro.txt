@@ -1,0 +1,49 @@
+Draft an email introducing a new team member to the engineering department.
+
+New team member details:
+- Name: Alex Rivera
+- Role: Senior Backend Engineer
+- Start date: Next Monday
+- Background: 7 years experience at major tech companies (Google, Stripe)
+- Specialties: Distributed systems, microservices architecture, Rust and Go
+- Team: Platform Engineering team
+- Manager: Jordan Kim
+- Location: Remote (based in Austin, TX)
+
+Context:
+- Engineering department has about 40 people
+- Very collaborative culture
+- New hire is replacing someone who left 6 months ago
+- Team has been eagerly waiting for this position to be filled
+
+Purpose:
+- Introduce Alex to the whole engineering department
+- Make them feel welcome
+- Provide context about their role
+- Encourage team members to reach out
+
+Tone: Welcoming, enthusiastic, professional
+
+Key points to include:
+1. Announce Alex's arrival and start date
+2. Brief background highlighting relevant experience
+3. Explain their role and which team they're joining
+4. Mention what they'll be working on initially
+5. Encourage team to introduce themselves
+6. Include Alex's email/Slack handle for contact
+7. Express excitement about them joining
+
+Structure:
+- Subject: Clear and welcoming
+- Greeting: Address the whole team
+- Introduction: Who is joining and when
+- Background: Professional highlights
+- Role: What they'll do
+- Call-to-action: Encourage welcomes
+- Closing: Positive and inclusive
+
+Additional notes:
+- Keep it upbeat and positive
+- Not too long (150-200 words)
+- Make Alex sound like a great addition
+- Set a welcoming tone for the team

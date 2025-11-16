@@ -1,0 +1,38 @@
+Write a follow-up email to a customer who purchased our "Pro Plan" subscription 2 weeks ago.
+
+Context:
+- Customer: Sarah Thompson
+- Product: Pro Plan subscription for project management software
+- Purchase date: 2 weeks ago
+- This is their first subscription with us
+- We want to ensure they're satisfied and getting value
+
+Purpose:
+- Check in on their experience
+- Offer assistance if needed
+- Encourage feedback to improve our product
+- Build long-term relationship
+
+Tone: Professional but warm and friendly
+
+Key points to include:
+1. Thank them for their purchase and trust
+2. Ask about their experience so far
+3. Offer specific help or resources if they need it
+4. Invite feedback (positive or constructive)
+5. Provide direct contact information for support
+6. Mention any relevant features they might not have discovered
+
+Structure:
+- Subject line: Clear and personal
+- Greeting: Use their name
+- Opening: Warm and genuine
+- Body: Cover all key points naturally
+- Closing: Encouraging and helpful
+- Signature: Professional with contact details
+
+Additional notes:
+- Keep it concise (200-250 words)
+- Avoid being overly salesy
+- Make it easy for them to respond
+- Include a specific call-to-action (reply with feedback)
