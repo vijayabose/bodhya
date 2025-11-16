@@ -1,34 +1,91 @@
-/// Code Generation Agent (Phase 5 stub)
+/// Code Generation Agent
 ///
-/// This is a minimal stub implementation for Phase 5 vertical slice.
-/// It implements the Agent trait and returns static code responses.
-/// Full BDD/TDD implementation will be added in Phase 6-7.
+/// Phase 5: Minimal stub with static responses
+/// Phase 6: Planner and BDD/Gherkin generation (current)
+/// Phase 7: TDD, implementation generation, and review (future)
 use async_trait::async_trait;
 use bodhya_core::{Agent, AgentCapability, AgentContext, AgentResult, Result, Task};
+use bodhya_model_registry::ModelRegistry;
+use std::sync::Arc;
 
-/// Code generation agent stub
+mod bdd;
+mod planner;
+
+// Re-export public types
+pub use bdd::{BddGenerator, GherkinFeature, GherkinScenario, GherkinStep};
+pub use planner::{CodePlan, Planner};
+
+/// Code generation agent
 pub struct CodeAgent {
     enabled: bool,
+    registry: Option<Arc<ModelRegistry>>,
 }
 
 impl CodeAgent {
-    /// Create a new CodeAgent instance
+    /// Create a new CodeAgent instance (Phase 5 compatibility - no registry)
     pub fn new() -> Self {
-        Self { enabled: true }
+        Self {
+            enabled: true,
+            registry: None,
+        }
+    }
+
+    /// Create a new CodeAgent with model registry (Phase 6+)
+    pub fn with_registry(registry: Arc<ModelRegistry>) -> Self {
+        Self {
+            enabled: true,
+            registry: Some(registry),
+        }
     }
 
     /// Create a new CodeAgent with specific enabled state
     pub fn with_enabled(enabled: bool) -> Self {
-        Self { enabled }
+        Self {
+            enabled,
+            registry: None,
+        }
     }
 
-    /// Generate static hello world code
+    /// Generate static hello world code (Phase 5 fallback)
     fn generate_hello_world(&self) -> String {
         r#"fn main() {
     println!("Hello, World!");
 }
 "#
         .to_string()
+    }
+
+    /// Generate code using planner and BDD (Phase 6)
+    async fn generate_with_bdd(&self, task: &Task) -> Result<String> {
+        let registry = self.registry.as_ref().ok_or_else(|| {
+            bodhya_core::Error::Config("Model registry not configured for CodeAgent".to_string())
+        })?;
+
+        // Step 1: Create a plan
+        let planner = Planner::new(Arc::clone(registry))?;
+        let plan = planner.plan(&task.description).await?;
+
+        // Step 2: Generate Gherkin features from plan
+        let bdd_generator = BddGenerator::new(Arc::clone(registry))?;
+        let feature = bdd_generator.generate(&task.description, &plan).await?;
+
+        // Step 3: Format the output (Phase 6: just return the Gherkin)
+        let mut output = String::new();
+        output.push_str("## Plan\n\n");
+        output.push_str(&format!("**Purpose**: {}\n\n", plan.purpose));
+
+        if !plan.components.is_empty() {
+            output.push_str("**Components**:\n");
+            for component in &plan.components {
+                output.push_str(&format!("- {}\n", component));
+            }
+            output.push('\n');
+        }
+
+        output.push_str("## BDD Features\n\n");
+        output.push_str(&feature.to_gherkin());
+
+        Ok(output)
     }
 }
 
@@ -70,13 +127,31 @@ impl Agent for CodeAgent {
     }
 
     async fn handle(&self, task: Task, _ctx: AgentContext) -> Result<AgentResult> {
-        // Phase 5 stub: return static hello world code for any request
-        let code = self.generate_hello_world();
-
-        let content = format!(
-            "Generated Rust code for task: {}\n\n{}",
-            task.description, code
-        );
+        let content = if self.registry.is_some() {
+            // Phase 6+: Use planner and BDD generator
+            match self.generate_with_bdd(&task).await {
+                Ok(output) => output,
+                Err(e) => {
+                    // Fall back to static response on error
+                    eprintln!(
+                        "BDD generation failed: {}, falling back to static response",
+                        e
+                    );
+                    let code = self.generate_hello_world();
+                    format!(
+                        "Generated Rust code for task: {}\n\n{}",
+                        task.description, code
+                    )
+                }
+            }
+        } else {
+            // Phase 5: Static hello world code
+            let code = self.generate_hello_world();
+            format!(
+                "Generated Rust code for task: {}\n\n{}",
+                task.description, code
+            )
+        };
 
         Ok(AgentResult::success(task.id, content))
     }
