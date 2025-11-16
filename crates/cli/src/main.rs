@@ -70,7 +70,8 @@ enum ModelsCommands {
     },
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
     // Initialize logging
@@ -101,7 +102,7 @@ fn main() {
             ModelsCommands::Install { model_id } => models_cmd::install_model(&model_id),
             ModelsCommands::Remove { model_id } => models_cmd::remove_model(&model_id),
         },
-        Commands::Run { domain, task } => run_cmd::run_task(domain, task),
+        Commands::Run { domain, task } => run_cmd::run_task(domain, task).await,
     };
 
     // Handle errors
