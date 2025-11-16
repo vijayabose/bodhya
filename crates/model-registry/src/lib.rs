@@ -2,12 +2,16 @@
 ///
 /// This crate provides model manifest parsing, model lookup/selection,
 /// and model backend implementations (local and remote).
+pub use downloader::{DownloadResult, ModelDownloader};
 pub use local_mistral::{LocalBackendConfig, LocalMistralBackend};
+pub use manager::ModelManager;
 pub use manifest::{BackendConfig, ModelDefinition, ModelManifest};
 pub use registry::{ModelInfo, ModelListEntry, ModelRegistry};
 pub use remote_stub::{RemoteBackend, RemoteBackendConfig};
 
+pub mod downloader;
 pub mod local_mistral;
+pub mod manager;
 pub mod manifest;
 pub mod registry;
 pub mod remote_stub;

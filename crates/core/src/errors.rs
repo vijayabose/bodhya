@@ -37,7 +37,15 @@ pub enum Error {
 
     /// IO errors
     #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(String),
+
+    /// Network errors
+    #[error("Network error: {0}")]
+    Network(String),
+
+    /// Checksum verification failed
+    #[error("Checksum mismatch: {0}")]
+    ChecksumMismatch(String),
 
     /// Serialization/deserialization errors
     #[error("Serialization error: {0}")]
@@ -60,7 +68,13 @@ pub enum Error {
     Internal(String),
 }
 
-// Implement conversions for common serialization errors
+// Implement conversions for common error types
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Self {
+        Error::Io(err.to_string())
+    }
+}
+
 impl From<serde_json::Error> for Error {
     fn from(err: serde_json::Error) -> Self {
         Error::Serialization(err.to_string())
