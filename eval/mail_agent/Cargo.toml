@@ -1,0 +1,19 @@
+[package]
+name = "bodhya-eval-mail-agent"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+colored = "2.1"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Bodhya crates
+bodhya-core = { path = "../../crates/core" }
+bodhya-agent-mail = { path = "../../crates/agent-mail" }
+bodhya-model-registry = { path = "../../crates/model-registry" }
+
+[dev-dependencies]
