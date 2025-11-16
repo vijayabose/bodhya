@@ -9,6 +9,7 @@ repository.workspace = true
 
 [dependencies]
 bodhya-core = { path = "../core" }
+bodhya-model-registry = { path = "../model-registry" }
 tokio.workspace = true
 async-trait.workspace = true
 serde.workspace = true
