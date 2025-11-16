@@ -1,7 +1,7 @@
 # Bodhya Implementation Checklist
 
 **Last Updated**: 2025-11-16
-**Status**: Phase 11 Complete - 337 tests passing, Storage & Metrics infrastructure ready
+**Status**: Phase 13 Complete - 369 tests passing, API Server ready for integration
 
 ---
 
@@ -300,20 +300,36 @@
 
 ---
 
-## Phase 13: API Server (Optional) ⬜
+## Phase 13: API Server (Optional) ✅
 
 **Goal**: Add REST/WebSocket API for programmatic access
 
-- [ ] Implement **`api-server` crate** (optional):
-  - [ ] `routes.rs` - REST endpoints for task submission, status, results
-  - [ ] WebSocket support for streaming responses
-- [ ] Add `bodhya serve` command
-- [ ] Write API integration tests
+- [x] Implement **`api-server` crate** (optional):
+  - [x] `models.rs` - Request/response models, task status, WebSocket messages
+  - [x] `state.rs` - Application state with task storage and execution
+  - [x] `routes.rs` - REST endpoints for task submission, status, results, agents, health
+  - [x] `websocket.rs` - WebSocket support for streaming responses (500ms polling)
+  - [x] `middleware.rs` - CORS and tracing layers
+  - [x] `main.rs` - Server entry point (127.0.0.1:3000)
+- [x] Create **`controller/controller.rs`** - Simple wrapper for API integration
+- [x] Add `bodhya serve` command with --port and --host options
+- [x] Write API integration tests (19 unit tests)
+- [x] Create OpenAPI 3.0 specification
+- [x] Create comprehensive README with examples
 
-**Deliverables**:
-- Working REST API
-- WebSocket streaming for long-running tasks
-- OpenAPI documentation
+**Deliverables**: ✅
+- Working REST API with 5 endpoints:
+  * POST /tasks - Submit new task
+  * GET /tasks/:id - Get task status
+  * GET /tasks/:id/result - Get task result
+  * GET /agents - List available agents
+  * GET /health - Health check
+- WebSocket streaming for real-time task updates (WS /ws/tasks/:id)
+- Controller wrapper for easy integration (2 tests)
+- Complete OpenAPI 3.0 documentation (openapi.yaml)
+- Comprehensive README with cURL, JavaScript, and Python examples
+- Quality gates passing (369 total tests across workspace)
+- Committed and pushed to `claude/add-evaluation-harnesses-01HnG9MwUu4xEwkLYt1WqjNt`
 
 ---
 
@@ -365,6 +381,6 @@ Before considering implementation complete, verify:
 
 Legend: ⬜ Not Started | 🔄 In Progress | ✅ Complete
 
-**Current Phase**: Phase 12 Complete - Evaluation Harnesses
-**Next Phase**: Phase 13 - API Server (Optional)
+**Current Phase**: Phase 13 Complete - API Server
+**Next Phase**: Phase 14 - Documentation & Polish (Optional)
 **Last Updated**: 2025-11-16

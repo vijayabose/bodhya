@@ -7,6 +7,7 @@ pub mod history_cmd;
 pub mod init_cmd;
 pub mod models_cmd;
 pub mod run_cmd;
+pub mod serve_cmd;
 pub mod utils;
 
 pub use config_templates::ConfigTemplate;
