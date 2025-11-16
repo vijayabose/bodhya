@@ -19,6 +19,8 @@ thiserror.workspace = true
 reqwest.workspace = true
 home.workspace = true
 tracing.workspace = true
+sha2.workspace = true
+futures.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
