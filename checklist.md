@@ -1,7 +1,7 @@
 # Bodhya Implementation Checklist
 
-**Last Updated**: 2025-11-15
-**Status**: Phase 4 Complete - 151 tests passing, all quality gates green
+**Last Updated**: 2025-11-16
+**Status**: Phase 5 Complete - 165 tests passing, first vertical slice working
 
 ---
 
@@ -97,23 +97,27 @@
 
 ---
 
-## Phase 5: First Vertical Slice ⬜
+## Phase 5: First Vertical Slice ✅
 
 **Goal**: Minimal end-to-end flow (CLI → Controller → Static Response)
 
-- [ ] Create minimal **`agent-code` stub**:
-  - [ ] Implements Agent trait
-  - [ ] Returns static "Hello World" Rust code
-  - [ ] No real model calls yet
-- [ ] Wire CLI → Controller → CodeAgent
-- [ ] Implement `bodhya run --domain code --task "hello"` end-to-end
-- [ ] Add integration test for the complete flow
+- [x] Create minimal **`agent-code` stub**:
+  - [x] Implements Agent trait
+  - [x] Returns static "Hello World" Rust code
+  - [x] No real model calls yet
+- [x] Wire CLI → Controller → CodeAgent
+- [x] Implement `bodhya run --domain code --task "hello"` end-to-end
+- [x] Add integration test for the complete flow
 
-**Deliverables**:
+**Deliverables**: ✅
 - First working end-to-end slice
 - Validates architecture and wiring
 - Proves capability-based routing works
 - Integration test matching `@slice_v1` Gherkin scenario
+- 6 integration tests covering vertical slice scenarios
+- 8 unit tests for CodeAgent
+- Quality gates passing (165 total tests)
+- Committed and pushed to `claude/plan-and-implement-01X8umSH1nPwnW9P3799Ctrh`
 
 ---
 
@@ -313,6 +317,6 @@ Before considering implementation complete, verify:
 
 Legend: ⬜ Not Started | 🔄 In Progress | ✅ Complete
 
-**Current Phase**: Phase 4 Complete - CLI Foundation
-**Next Phase**: Phase 5 - First Vertical Slice
-**Last Updated**: 2025-11-15
+**Current Phase**: Phase 5 Complete - First Vertical Slice
+**Next Phase**: Phase 6 - CodeAgent Planner & BDD
+**Last Updated**: 2025-11-16
