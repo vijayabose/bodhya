@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use crate::config::AppConfig;
 use crate::errors::Result;
+use std::path::PathBuf;
 
 /// Represents a task to be handled by an agent
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -145,6 +146,77 @@ impl AgentCapability {
     }
 }
 
+/// Execution limits to prevent resource exhaustion and infinite loops
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ExecutionLimits {
+    /// Maximum number of iterations in agentic loop
+    #[serde(default = "default_max_iterations")]
+    pub max_iterations: usize,
+    /// Maximum number of file write operations
+    #[serde(default = "default_max_file_writes")]
+    pub max_file_writes: usize,
+    /// Maximum number of command executions
+    #[serde(default = "default_max_command_executions")]
+    pub max_command_executions: usize,
+    /// Global timeout in seconds
+    #[serde(default = "default_timeout_secs")]
+    pub timeout_secs: u64,
+}
+
+fn default_max_iterations() -> usize {
+    3
+}
+
+fn default_max_file_writes() -> usize {
+    20
+}
+
+fn default_max_command_executions() -> usize {
+    10
+}
+
+fn default_timeout_secs() -> u64 {
+    300 // 5 minutes
+}
+
+impl Default for ExecutionLimits {
+    fn default() -> Self {
+        Self {
+            max_iterations: default_max_iterations(),
+            max_file_writes: default_max_file_writes(),
+            max_command_executions: default_max_command_executions(),
+            timeout_secs: default_timeout_secs(),
+        }
+    }
+}
+
+impl ExecutionLimits {
+    /// Create new execution limits with custom values
+    pub fn new(
+        max_iterations: usize,
+        max_file_writes: usize,
+        max_command_executions: usize,
+        timeout_secs: u64,
+    ) -> Self {
+        Self {
+            max_iterations,
+            max_file_writes,
+            max_command_executions,
+            timeout_secs,
+        }
+    }
+
+    /// Create limits with no restrictions (use cautiously!)
+    pub fn unlimited() -> Self {
+        Self {
+            max_iterations: usize::MAX,
+            max_file_writes: usize::MAX,
+            max_command_executions: usize::MAX,
+            timeout_secs: u64::MAX,
+        }
+    }
+}
+
 /// Context provided to agents when handling tasks
 #[derive(Clone)]
 pub struct AgentContext {
@@ -152,6 +224,10 @@ pub struct AgentContext {
     pub config: AppConfig,
     /// Task-specific metadata
     pub metadata: serde_json::Value,
+    /// Working directory for file operations
+    pub working_dir: Option<PathBuf>,
+    /// Execution limits to prevent resource exhaustion
+    pub execution_limits: ExecutionLimits,
 }
 
 impl AgentContext {
@@ -160,6 +236,8 @@ impl AgentContext {
         Self {
             config,
             metadata: serde_json::Value::Null,
+            working_dir: None,
+            execution_limits: ExecutionLimits::default(),
         }
     }
 
@@ -167,6 +245,28 @@ impl AgentContext {
     pub fn with_metadata(mut self, metadata: serde_json::Value) -> Self {
         self.metadata = metadata;
         self
+    }
+
+    /// Set the working directory for file operations
+    pub fn with_working_dir(mut self, working_dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(working_dir.into());
+        self
+    }
+
+    /// Set execution limits
+    pub fn with_execution_limits(mut self, limits: ExecutionLimits) -> Self {
+        self.execution_limits = limits;
+        self
+    }
+
+    /// Get the working directory, or current directory if not set
+    pub fn get_working_dir(&self) -> Result<PathBuf> {
+        self.working_dir
+            .clone()
+            .or_else(|| std::env::current_dir().ok())
+            .ok_or_else(|| {
+                crate::errors::Error::Config("No working directory available".to_string())
+            })
     }
 }
 
@@ -281,6 +381,91 @@ mod tests {
         let metadata = serde_json::json!({"request_id": "req-123"});
         let ctx = AgentContext::new(config).with_metadata(metadata.clone());
         assert_eq!(ctx.metadata, metadata);
+    }
+
+    #[test]
+    fn test_execution_limits_default() {
+        let limits = ExecutionLimits::default();
+        assert_eq!(limits.max_iterations, 3);
+        assert_eq!(limits.max_file_writes, 20);
+        assert_eq!(limits.max_command_executions, 10);
+        assert_eq!(limits.timeout_secs, 300);
+    }
+
+    #[test]
+    fn test_execution_limits_custom() {
+        let limits = ExecutionLimits::new(5, 50, 20, 600);
+        assert_eq!(limits.max_iterations, 5);
+        assert_eq!(limits.max_file_writes, 50);
+        assert_eq!(limits.max_command_executions, 20);
+        assert_eq!(limits.timeout_secs, 600);
+    }
+
+    #[test]
+    fn test_execution_limits_unlimited() {
+        let limits = ExecutionLimits::unlimited();
+        assert_eq!(limits.max_iterations, usize::MAX);
+        assert_eq!(limits.max_file_writes, usize::MAX);
+        assert_eq!(limits.max_command_executions, usize::MAX);
+        assert_eq!(limits.timeout_secs, u64::MAX);
+    }
+
+    #[test]
+    fn test_execution_limits_serialization() {
+        let limits = ExecutionLimits::new(5, 50, 20, 600);
+        let json = serde_json::to_string(&limits).unwrap();
+        let deserialized: ExecutionLimits = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.max_iterations, 5);
+        assert_eq!(deserialized.max_file_writes, 50);
+        assert_eq!(deserialized.max_command_executions, 20);
+        assert_eq!(deserialized.timeout_secs, 600);
+    }
+
+    #[test]
+    fn test_agent_context_with_working_dir() {
+        let config = AppConfig::default();
+        let ctx = AgentContext::new(config).with_working_dir("/tmp/test");
+        assert_eq!(ctx.working_dir, Some(PathBuf::from("/tmp/test")));
+    }
+
+    #[test]
+    fn test_agent_context_with_execution_limits() {
+        let config = AppConfig::default();
+        let limits = ExecutionLimits::new(5, 50, 20, 600);
+        let ctx = AgentContext::new(config).with_execution_limits(limits.clone());
+        assert_eq!(ctx.execution_limits.max_iterations, 5);
+        assert_eq!(ctx.execution_limits.max_file_writes, 50);
+    }
+
+    #[test]
+    fn test_agent_context_get_working_dir() {
+        let config = AppConfig::default();
+
+        // Test with explicit working dir
+        let ctx = AgentContext::new(config.clone()).with_working_dir("/tmp/explicit");
+        let working_dir = ctx.get_working_dir().unwrap();
+        assert_eq!(working_dir, PathBuf::from("/tmp/explicit"));
+
+        // Test fallback to current directory
+        let ctx_no_dir = AgentContext::new(config);
+        let working_dir_fallback = ctx_no_dir.get_working_dir();
+        assert!(working_dir_fallback.is_ok());
+    }
+
+    #[test]
+    fn test_agent_context_builder_chain() {
+        let config = AppConfig::default();
+        let metadata = serde_json::json!({"request_id": "req-123"});
+        let limits = ExecutionLimits::new(5, 50, 20, 600);
+
+        let ctx = AgentContext::new(config)
+            .with_metadata(metadata.clone())
+            .with_working_dir("/tmp/chain")
+            .with_execution_limits(limits);
+
+        assert_eq!(ctx.metadata, metadata);
+        assert_eq!(ctx.working_dir, Some(PathBuf::from("/tmp/chain")));
+        assert_eq!(ctx.execution_limits.max_iterations, 5);
     }
 
     // Mock agent for testing
