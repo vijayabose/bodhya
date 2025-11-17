@@ -47,6 +47,10 @@ enum Commands {
         #[arg(short, long)]
         domain: Option<String>,
 
+        /// Working directory for file operations
+        #[arg(short, long)]
+        working_dir: Option<String>,
+
         /// Task description
         #[arg(required = true)]
         task: String,
@@ -134,7 +138,11 @@ async fn main() {
             ModelsCommands::Install { model_id } => models_cmd::install_model(&model_id),
             ModelsCommands::Remove { model_id } => models_cmd::remove_model(&model_id),
         },
-        Commands::Run { domain, task } => run_cmd::run_task(domain, task).await,
+        Commands::Run {
+            domain,
+            working_dir,
+            task,
+        } => run_cmd::run_task(domain, working_dir, task).await,
         Commands::History(history_cmd) => match history_cmd {
             HistoryCommands::Show { limit } => history_cmd::show_history(limit),
             HistoryCommands::Stats { domain } => history_cmd::show_stats(&domain),
@@ -260,8 +268,13 @@ mod tests {
     fn test_run_command() {
         let cli = Cli::parse_from(["bodhya", "run", "Generate hello world"]);
         match cli.command {
-            Commands::Run { domain, task } => {
+            Commands::Run {
+                domain,
+                working_dir,
+                task,
+            } => {
                 assert_eq!(domain, None);
+                assert_eq!(working_dir, None);
                 assert_eq!(task, "Generate hello world");
             }
             _ => panic!("Expected Run command"),
@@ -272,8 +285,55 @@ mod tests {
     fn test_run_command_with_domain() {
         let cli = Cli::parse_from(["bodhya", "run", "--domain", "code", "Generate code"]);
         match cli.command {
-            Commands::Run { domain, task } => {
+            Commands::Run {
+                domain,
+                working_dir,
+                task,
+            } => {
                 assert_eq!(domain, Some("code".to_string()));
+                assert_eq!(working_dir, None);
+                assert_eq!(task, "Generate code");
+            }
+            _ => panic!("Expected Run command"),
+        }
+    }
+
+    #[test]
+    fn test_run_command_with_working_dir() {
+        let cli = Cli::parse_from(["bodhya", "run", "--working-dir", "/tmp", "Generate code"]);
+        match cli.command {
+            Commands::Run {
+                domain,
+                working_dir,
+                task,
+            } => {
+                assert_eq!(domain, None);
+                assert_eq!(working_dir, Some("/tmp".to_string()));
+                assert_eq!(task, "Generate code");
+            }
+            _ => panic!("Expected Run command"),
+        }
+    }
+
+    #[test]
+    fn test_run_command_with_all_flags() {
+        let cli = Cli::parse_from([
+            "bodhya",
+            "run",
+            "--domain",
+            "code",
+            "--working-dir",
+            "/home/user/project",
+            "Generate code",
+        ]);
+        match cli.command {
+            Commands::Run {
+                domain,
+                working_dir,
+                task,
+            } => {
+                assert_eq!(domain, Some("code".to_string()));
+                assert_eq!(working_dir, Some("/home/user/project".to_string()));
                 assert_eq!(task, "Generate code");
             }
             _ => panic!("Expected Run command"),

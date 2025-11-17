@@ -4,6 +4,7 @@
 /// task intake -> routing -> agent execution -> result collection -> logging
 use bodhya_core::{AgentContext, AgentResult, AppConfig, Task};
 use bodhya_tools_mcp::ToolRegistry;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::engagement::EngagementManager;
@@ -19,6 +20,8 @@ pub struct TaskOrchestrator {
     config: AppConfig,
     /// Tool registry for file/command operations
     tools: Arc<ToolRegistry>,
+    /// Working directory for file operations
+    working_dir: Option<PathBuf>,
 }
 
 impl TaskOrchestrator {
@@ -32,6 +35,7 @@ impl TaskOrchestrator {
             engagement,
             config,
             tools,
+            working_dir: None,
         }
     }
 
@@ -44,7 +48,13 @@ impl TaskOrchestrator {
             engagement,
             config,
             tools,
+            working_dir: None,
         }
+    }
+
+    /// Set the working directory for file operations
+    pub fn set_working_dir(&mut self, working_dir: impl Into<PathBuf>) {
+        self.working_dir = Some(working_dir.into());
     }
 
     /// Get a reference to the tool registry
@@ -93,9 +103,14 @@ impl TaskOrchestrator {
             "Selected agent for task"
         );
 
-        // Create agent context with tools
-        let context = AgentContext::new(self.config.clone())
+        // Create agent context with tools and working directory
+        let mut context = AgentContext::new(self.config.clone())
             .with_tools(Arc::clone(&self.tools) as Arc<dyn std::any::Any + Send + Sync>);
+
+        // Set working directory if specified
+        if let Some(ref wd) = self.working_dir {
+            context = context.with_working_dir(wd.clone());
+        }
 
         // Execute task through agent
         let start_time = std::time::Instant::now();
@@ -160,6 +175,7 @@ impl TaskOrchestrator {
             engagement: self.engagement.clone(),
             config: self.config.clone(),
             tools: Arc::clone(&self.tools),
+            working_dir: self.working_dir.clone(),
         })
     }
 }
