@@ -50,15 +50,24 @@ impl FilesystemTool {
                 // Check parent directory if file doesn't exist
                 if let Some(parent) = resolved.parent() {
                     if parent.exists() {
-                        parent.canonicalize().map_err(|e| {
+                        let canonical_parent = parent.canonicalize().map_err(|e| {
                             bodhya_core::Error::Tool(format!(
                                 "Failed to canonicalize parent: {}",
                                 e
                             ))
                         })?;
+                        // Join canonical parent with filename
+                        if let Some(filename) = resolved.file_name() {
+                            canonical_parent.join(filename)
+                        } else {
+                            resolved
+                        }
+                    } else {
+                        resolved
                     }
+                } else {
+                    resolved
                 }
-                resolved
             };
 
             // Security check: ensure path is within base_dir
