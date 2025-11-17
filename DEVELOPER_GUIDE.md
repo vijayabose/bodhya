@@ -1,7 +1,7 @@
 # Bodhya Developer Guide
 
 **Version**: 1.0
-**Last Updated**: 2025-11-16
+**Last Updated**: 2025-11-17
 
 This guide is for developers who want to extend Bodhya by creating custom agents, integrating new models, or contributing to the core platform.
 

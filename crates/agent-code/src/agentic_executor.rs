@@ -79,10 +79,16 @@ impl ErrorAnalyzer {
         let fallback_category = self.categorize_error(error_text);
 
         // Try LLM-based analysis first
-        match self.llm_analyze(plan_context, generated_code, test_code, error_text).await {
+        match self
+            .llm_analyze(plan_context, generated_code, test_code, error_text)
+            .await
+        {
             Ok(analysis) => Ok(analysis),
             Err(e) => {
-                tracing::warn!("LLM error analysis failed, falling back to heuristics: {}", e);
+                tracing::warn!(
+                    "LLM error analysis failed, falling back to heuristics: {}",
+                    e
+                );
                 // Fall back to heuristic analysis
                 self.heuristic_analyze(output, fallback_category).await
             }
@@ -107,9 +113,9 @@ impl ErrorAnalyzer {
             .replace("{error_output}", error_output);
 
         // Get planner model from registry for reasoning
-        let model_info = self
-            .registry
-            .get_model(&ModelRole::Planner, "code", &EngagementMode::Minimum)?;
+        let model_info =
+            self.registry
+                .get_model(&ModelRole::Planner, "code", &EngagementMode::Minimum)?;
 
         // Create model request
         let request = ModelRequest::new(ModelRole::Planner, "code", prompt);
@@ -152,7 +158,9 @@ impl ErrorAnalyzer {
             if line_trimmed.starts_with("##") && line_trimmed.contains("Root Cause") {
                 // The next non-empty line is the root cause
                 continue;
-            } else if root_cause.is_none() && !line_trimmed.starts_with("##") && !line_trimmed.is_empty()
+            } else if root_cause.is_none()
+                && !line_trimmed.starts_with("##")
+                && !line_trimmed.is_empty()
                 && response.contains("Root Cause Analysis")
             {
                 root_cause = Some(line_trimmed.to_string());
@@ -350,7 +358,8 @@ impl CodeRefiner {
         error_analysis: &ErrorAnalysis,
         plan: &CodePlan,
     ) -> Result<ImplCode> {
-        self.refine_with_iteration(original_impl, test_code, error_analysis, plan, 0).await
+        self.refine_with_iteration(original_impl, test_code, error_analysis, plan, 0)
+            .await
     }
 
     /// Generate refined implementation with iteration context
@@ -369,7 +378,10 @@ impl CodeRefiner {
         {
             Ok(refined) => Ok(refined),
             Err(e) => {
-                tracing::warn!("LLM code refinement failed, falling back to heuristics: {}", e);
+                tracing::warn!(
+                    "LLM code refinement failed, falling back to heuristics: {}",
+                    e
+                );
                 // Fall back to heuristic refinement
                 self.heuristic_refine(original_impl, error_analysis).await
             }
@@ -388,7 +400,11 @@ impl CodeRefiner {
         let prompt_template = self.load_prompt()?;
 
         // Format plan context
-        let plan_context = format!("Purpose: {}\nRequirements: {}", plan.purpose, plan.requirements.join(", "));
+        let plan_context = format!(
+            "Purpose: {}\nRequirements: {}",
+            plan.purpose,
+            plan.requirements.join(", ")
+        );
 
         // Format error analysis
         let error_analysis_text = format!(
@@ -406,12 +422,15 @@ impl CodeRefiner {
             .replace("{test_code}", &test_code.code)
             .replace("{error_analysis}", &error_analysis_text)
             .replace("{iteration}", &iteration.to_string())
-            .replace("{previous_error_category}", &format!("{:?}", error_analysis.category));
+            .replace(
+                "{previous_error_category}",
+                &format!("{:?}", error_analysis.category),
+            );
 
         // Get coder model from registry
-        let model_info = self
-            .registry
-            .get_model(&ModelRole::Coder, "code", &EngagementMode::Minimum)?;
+        let model_info =
+            self.registry
+                .get_model(&ModelRole::Coder, "code", &EngagementMode::Minimum)?;
 
         // Create model request
         let request = ModelRequest::new(ModelRole::Coder, "code", prompt);
@@ -430,7 +449,10 @@ impl CodeRefiner {
         let refined_code = self.extract_code_from_response(&response.text)?;
 
         // Count lines of code
-        let loc = refined_code.lines().filter(|l| !l.trim().is_empty()).count();
+        let loc = refined_code
+            .lines()
+            .filter(|l| !l.trim().is_empty())
+            .count();
 
         Ok(ImplCode {
             code: refined_code,
@@ -576,10 +598,19 @@ impl AgenticExecutor {
             }
 
             // Analyze errors with full context for LLM
-            let plan_context = format!("Purpose: {}\nRequirements: {}", plan.purpose, plan.requirements.join(", "));
+            let plan_context = format!(
+                "Purpose: {}\nRequirements: {}",
+                plan.purpose,
+                plan.requirements.join(", ")
+            );
             let error_analysis = self
                 .analyzer
-                .analyze_with_context(&test_result, &plan_context, &current_impl.code, &test_code.code)
+                .analyze_with_context(
+                    &test_result,
+                    &plan_context,
+                    &current_impl.code,
+                    &test_code.code,
+                )
                 .await?;
 
             // Check if we've reached max iterations
