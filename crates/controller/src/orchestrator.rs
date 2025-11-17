@@ -3,6 +3,7 @@
 /// This module handles the end-to-end task execution pipeline:
 /// task intake -> routing -> agent execution -> result collection -> logging
 use bodhya_core::{AgentContext, AgentResult, AppConfig, Task};
+use bodhya_tools_mcp::ToolRegistry;
 use std::sync::Arc;
 
 use crate::engagement::EngagementManager;
@@ -16,18 +17,39 @@ pub struct TaskOrchestrator {
     engagement: EngagementManager,
     /// Application configuration
     config: AppConfig,
+    /// Tool registry for file/command operations
+    tools: Arc<ToolRegistry>,
 }
 
 impl TaskOrchestrator {
     /// Create a new orchestrator
     pub fn new(config: AppConfig) -> Self {
         let engagement = EngagementManager::new(config.engagement_mode.clone());
+        let tools = Arc::new(ToolRegistry::with_defaults());
 
         Self {
             router: AgentRouter::new(),
             engagement,
             config,
+            tools,
         }
+    }
+
+    /// Create a new orchestrator with custom tools
+    pub fn with_tools(config: AppConfig, tools: Arc<ToolRegistry>) -> Self {
+        let engagement = EngagementManager::new(config.engagement_mode.clone());
+
+        Self {
+            router: AgentRouter::new(),
+            engagement,
+            config,
+            tools,
+        }
+    }
+
+    /// Get a reference to the tool registry
+    pub fn tools(&self) -> &Arc<ToolRegistry> {
+        &self.tools
     }
 
     /// Get a mutable reference to the router (for registering agents)
@@ -71,8 +93,9 @@ impl TaskOrchestrator {
             "Selected agent for task"
         );
 
-        // Create agent context
-        let context = AgentContext::new(self.config.clone());
+        // Create agent context with tools
+        let context = AgentContext::new(self.config.clone())
+            .with_tools(Arc::clone(&self.tools) as Arc<dyn std::any::Any + Send + Sync>);
 
         // Execute task through agent
         let start_time = std::time::Instant::now();
@@ -136,6 +159,7 @@ impl TaskOrchestrator {
             router: self.router.clone(),
             engagement: self.engagement.clone(),
             config: self.config.clone(),
+            tools: Arc::clone(&self.tools),
         })
     }
 }

@@ -9,6 +9,7 @@ use uuid::Uuid;
 use crate::config::AppConfig;
 use crate::errors::Result;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 /// Represents a task to be handled by an agent
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -228,6 +229,9 @@ pub struct AgentContext {
     pub working_dir: Option<PathBuf>,
     /// Execution limits to prevent resource exhaustion
     pub execution_limits: ExecutionLimits,
+    /// Tool registry (type-erased to avoid circular dependency)
+    /// Agents can downcast this to ToolRegistry using std::any::Any
+    pub tools: Option<Arc<dyn std::any::Any + Send + Sync>>,
 }
 
 impl AgentContext {
@@ -238,6 +242,7 @@ impl AgentContext {
             metadata: serde_json::Value::Null,
             working_dir: None,
             execution_limits: ExecutionLimits::default(),
+            tools: None,
         }
     }
 
@@ -256,6 +261,13 @@ impl AgentContext {
     /// Set execution limits
     pub fn with_execution_limits(mut self, limits: ExecutionLimits) -> Self {
         self.execution_limits = limits;
+        self
+    }
+
+    /// Set the tool registry (type-erased)
+    /// The registry should be Arc<ToolRegistry> which agents can downcast
+    pub fn with_tools(mut self, tools: Arc<dyn std::any::Any + Send + Sync>) -> Self {
+        self.tools = Some(tools);
         self
     }
 
