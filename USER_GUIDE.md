@@ -1,7 +1,7 @@
 # Bodhya User Guide
 
 **Version**: 1.0
-**Last Updated**: 2025-11-16
+**Last Updated**: 2025-11-17
 
 Welcome to Bodhya, your local-first multi-agent AI platform! This guide will help you get the most out of Bodhya's powerful features.
 

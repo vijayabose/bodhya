@@ -58,13 +58,16 @@ impl TaskOrchestrator {
     /// configured MCP servers and register their tools.
     pub async fn load_mcp_servers(&mut self) -> bodhya_core::Result<()> {
         // Get mutable access to tools
-        let tools = Arc::get_mut(&mut self.tools)
-            .ok_or_else(|| bodhya_core::Error::Tool(
-                "Cannot load MCP servers: ToolRegistry has multiple references".to_string()
-            ))?;
+        let tools = Arc::get_mut(&mut self.tools).ok_or_else(|| {
+            bodhya_core::Error::Tool(
+                "Cannot load MCP servers: ToolRegistry has multiple references".to_string(),
+            )
+        })?;
 
         // Load MCP servers from config
-        tools.load_mcp_servers(&self.config.tools.mcp_servers).await?;
+        tools
+            .load_mcp_servers(&self.config.tools.mcp_servers)
+            .await?;
 
         tracing::info!(
             "Loaded {} MCP servers from configuration",

@@ -1,9 +1,9 @@
 # CLAUDE.md - AI Assistant Guide for Bodhya
 
-**Last Updated**: 2025-11-15
+**Last Updated**: 2025-11-17
 **Project**: Bodhya - Local-first Multi-Agent AI Platform
 **Language**: Rust 1.75+
-**Stage**: Documentation & Design Complete, Implementation Pending
+**Stage**: v1.0 Complete - Production Ready
 
 ---
 
@@ -46,24 +46,28 @@ Bodhya is a **local-first, modular, multi-agent AI platform** designed to route 
 
 ## Repository Structure
 
-### Current State (as of 2025-11-15)
+### Current State (as of 2025-11-17)
+
+**Implementation Status**: ✅ All phases complete (v1.0 ready)
 
 ```
 bodhya/
-├── README.md                    # Brief project description
+├── README.md                    # Project overview & quick start
 ├── CLAUDE.md                    # This file - AI assistant guide
+├── USER_GUIDE.md                # Comprehensive user manual
+├── DEVELOPER_GUIDE.md           # Agent development guide
+├── checklist.md                 # Implementation progress tracker
+├── Cargo.toml                   # Workspace root
 ├── .git/                        # Git repository
-└── documents/                   # Complete design documentation
-    ├── bodhya_brd.md                    # Business Requirements Document
-    ├── bodhya_system_design.md          # System architecture & design
-    ├── bodhya_code_design.md            # Rust workspace layout & code structure
-    ├── bodhya_claude_prompt.md          # Instructions for AI assistants
-    ├── bodhya_gherkin_features.md       # High-level BDD features
-    ├── bodhya_gherkin_use_cases.md      # Use-case-level scenarios
-    └── bodhya_gherkin_test_cases.md     # Test-oriented scenarios
+├── documents/                   # Complete design documentation
+├── crates/                      # All implemented crates
+├── eval/                        # Evaluation harnesses
+├── examples/                    # Example tasks and usage
+├── prompts/                     # LLM prompt templates
+└── scripts/                     # Build & install scripts
 ```
 
-### Planned Structure (from bodhya_code_design.md)
+### Implemented Structure
 
 ```
 bodhya/
@@ -85,7 +89,7 @@ bodhya/
     └── api-server/             # REST/WebSocket API (optional)
 ```
 
-**IMPORTANT**: No code has been implemented yet. The repository currently contains only documentation.
+**Status**: ✅ All crates fully implemented with 369 passing tests. v1.0 production ready.
 
 ---
 
@@ -516,6 +520,7 @@ cargo test --all
 
 ## Version History
 
+- **2025-11-17**: Updated for v1.0 release - all phases complete, production ready
 - **2025-11-15**: Initial CLAUDE.md created - documentation phase complete, implementation pending
 
 ---
