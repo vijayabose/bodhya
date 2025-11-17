@@ -18,6 +18,7 @@ bodhya-model-registry = { path = "../model-registry" }
 bodhya-agent-code = { path = "../agent-code" }
 bodhya-agent-mail = { path = "../agent-mail" }
 bodhya-storage = { path = "../storage" }
+bodhya-tools-mcp = { path = "../tools-mcp" }
 tokio.workspace = true
 clap.workspace = true
 serde.workspace = true
