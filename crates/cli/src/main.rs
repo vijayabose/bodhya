@@ -51,6 +51,10 @@ enum Commands {
         #[arg(short, long)]
         working_dir: Option<String>,
 
+        /// Execution mode: generate-only, execute, execute-with-retry
+        #[arg(long, default_value = "execute")]
+        execution_mode: String,
+
         /// Task description
         #[arg(required = true)]
         task: String,
@@ -141,8 +145,9 @@ async fn main() {
         Commands::Run {
             domain,
             working_dir,
+            execution_mode,
             task,
-        } => run_cmd::run_task(domain, working_dir, task).await,
+        } => run_cmd::run_task(domain, working_dir, execution_mode, task).await,
         Commands::History(history_cmd) => match history_cmd {
             HistoryCommands::Show { limit } => history_cmd::show_history(limit),
             HistoryCommands::Stats { domain } => history_cmd::show_stats(&domain),
@@ -271,10 +276,12 @@ mod tests {
             Commands::Run {
                 domain,
                 working_dir,
+                execution_mode,
                 task,
             } => {
                 assert_eq!(domain, None);
                 assert_eq!(working_dir, None);
+                assert_eq!(execution_mode, "execute");
                 assert_eq!(task, "Generate hello world");
             }
             _ => panic!("Expected Run command"),
@@ -288,10 +295,12 @@ mod tests {
             Commands::Run {
                 domain,
                 working_dir,
+                execution_mode,
                 task,
             } => {
                 assert_eq!(domain, Some("code".to_string()));
                 assert_eq!(working_dir, None);
+                assert_eq!(execution_mode, "execute");
                 assert_eq!(task, "Generate code");
             }
             _ => panic!("Expected Run command"),
@@ -305,10 +314,12 @@ mod tests {
             Commands::Run {
                 domain,
                 working_dir,
+                execution_mode,
                 task,
             } => {
                 assert_eq!(domain, None);
                 assert_eq!(working_dir, Some("/tmp".to_string()));
+                assert_eq!(execution_mode, "execute");
                 assert_eq!(task, "Generate code");
             }
             _ => panic!("Expected Run command"),
@@ -330,10 +341,37 @@ mod tests {
             Commands::Run {
                 domain,
                 working_dir,
+                execution_mode,
                 task,
             } => {
                 assert_eq!(domain, Some("code".to_string()));
                 assert_eq!(working_dir, Some("/home/user/project".to_string()));
+                assert_eq!(execution_mode, "execute");
+                assert_eq!(task, "Generate code");
+            }
+            _ => panic!("Expected Run command"),
+        }
+    }
+
+    #[test]
+    fn test_run_command_with_execution_mode() {
+        let cli = Cli::parse_from([
+            "bodhya",
+            "run",
+            "--execution-mode",
+            "generate-only",
+            "Generate code",
+        ]);
+        match cli.command {
+            Commands::Run {
+                domain,
+                working_dir,
+                execution_mode,
+                task,
+            } => {
+                assert_eq!(domain, None);
+                assert_eq!(working_dir, None);
+                assert_eq!(execution_mode, "generate-only");
                 assert_eq!(task, "Generate code");
             }
             _ => panic!("Expected Run command"),

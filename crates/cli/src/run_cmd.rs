@@ -4,7 +4,7 @@
 /// Phase 5 adds full integration with the controller and code agent.
 use bodhya_agent_code::CodeAgent;
 use bodhya_controller::TaskOrchestrator;
-use bodhya_core::{AppConfig, Result, Task};
+use bodhya_core::{AppConfig, ExecutionMode, Result, Task};
 use std::sync::Arc;
 
 use crate::utils;
@@ -13,6 +13,7 @@ use crate::utils;
 pub async fn run_task(
     domain: Option<String>,
     working_dir: Option<String>,
+    execution_mode_str: String,
     task_description: String,
 ) -> Result<()> {
     // Check if initialized
@@ -62,9 +63,20 @@ pub async fn run_task(
     let config: AppConfig = serde_yaml::from_str(&config_content)
         .map_err(|e| bodhya_core::Error::Config(format!("Failed to parse config: {}", e)))?;
 
+    // Parse execution mode
+    let execution_mode = ExecutionMode::parse(&execution_mode_str).ok_or_else(|| {
+        bodhya_core::Error::Config(format!(
+            "Invalid execution mode '{}'. Valid modes: generate-only, execute, execute-with-retry",
+            execution_mode_str
+        ))
+    })?;
+
     // Initialize orchestrator with code agent
     // Note: TaskOrchestrator::new() already creates ToolRegistry with defaults
     let mut orchestrator = TaskOrchestrator::new(config);
+
+    // Set execution mode
+    orchestrator.set_execution_mode(execution_mode.clone());
 
     // Set working directory if specified
     if let Some(wd) = working_dir_path {
@@ -86,6 +98,11 @@ pub async fn run_task(
     if task.domain_hint.is_some() {
         println!("Domain: {}", task.domain_hint.as_ref().unwrap());
     }
+    println!(
+        "Execution Mode: {} - {}",
+        execution_mode.as_str(),
+        execution_mode.description()
+    );
     println!();
 
     let result = orchestrator.execute(task).await?;
@@ -160,7 +177,12 @@ mod tests {
             std::fs::create_dir_all(&config_dir).unwrap();
 
             let rt = tokio::runtime::Handle::current();
-            let result = rt.block_on(run_task(None, None, "test task".to_string()));
+            let result = rt.block_on(run_task(
+                None,
+                None,
+                "execute".to_string(),
+                "test task".to_string(),
+            ));
             assert!(result.is_err());
             assert!(result.unwrap_err().to_string().contains("not found"));
         });
@@ -177,6 +199,7 @@ mod tests {
             let result = rt.block_on(run_task(
                 None,
                 None,
+                "execute".to_string(),
                 "Generate a hello world function".to_string(),
             ));
             assert!(result.is_ok());
@@ -194,6 +217,7 @@ mod tests {
             let result = rt.block_on(run_task(
                 Some("code".to_string()),
                 None,
+                "execute".to_string(),
                 "Generate code".to_string(),
             ));
             assert!(result.is_ok());
@@ -210,7 +234,12 @@ mod tests {
 
             let rt = tokio::runtime::Handle::current();
             for task in tasks {
-                let result = rt.block_on(run_task(None, None, task.to_string()));
+                let result = rt.block_on(run_task(
+                    None,
+                    None,
+                    "execute".to_string(),
+                    task.to_string(),
+                ));
                 assert!(result.is_ok());
             }
         });

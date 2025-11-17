@@ -218,6 +218,55 @@ impl ExecutionLimits {
     }
 }
 
+/// Execution mode for code generation
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum ExecutionMode {
+    /// Generate code only (no file writes or command execution)
+    GenerateOnly,
+    /// Execute code (write files and run tests)
+    #[default]
+    Execute,
+    /// Execute with retry (observe-retry-fix workflow - Phase 3)
+    ExecuteWithRetry,
+}
+
+impl ExecutionMode {
+    /// Parse execution mode from string
+    pub fn parse(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "generate-only" | "generate_only" | "generate" => Some(Self::GenerateOnly),
+            "execute" | "exec" => Some(Self::Execute),
+            "execute-with-retry" | "execute_with_retry" | "retry" => Some(Self::ExecuteWithRetry),
+            _ => None,
+        }
+    }
+
+    /// Get string representation
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::GenerateOnly => "generate-only",
+            Self::Execute => "execute",
+            Self::ExecuteWithRetry => "execute-with-retry",
+        }
+    }
+
+    /// Get human-readable description
+    pub fn description(&self) -> &'static str {
+        match self {
+            Self::GenerateOnly => "Generate code only (no file operations)",
+            Self::Execute => "Generate code, write files, and run tests",
+            Self::ExecuteWithRetry => "Execute with retry on failures (agentic loop)",
+        }
+    }
+}
+
+impl std::fmt::Display for ExecutionMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
 /// Context provided to agents when handling tasks
 #[derive(Clone)]
 pub struct AgentContext {
@@ -229,6 +278,8 @@ pub struct AgentContext {
     pub working_dir: Option<PathBuf>,
     /// Execution limits to prevent resource exhaustion
     pub execution_limits: ExecutionLimits,
+    /// Execution mode (generate-only, execute, execute-with-retry)
+    pub execution_mode: ExecutionMode,
     /// Tool registry (type-erased to avoid circular dependency)
     /// Agents can downcast this to ToolRegistry using std::any::Any
     pub tools: Option<Arc<dyn std::any::Any + Send + Sync>>,
@@ -242,6 +293,7 @@ impl AgentContext {
             metadata: serde_json::Value::Null,
             working_dir: None,
             execution_limits: ExecutionLimits::default(),
+            execution_mode: ExecutionMode::default(),
             tools: None,
         }
     }
@@ -261,6 +313,12 @@ impl AgentContext {
     /// Set execution limits
     pub fn with_execution_limits(mut self, limits: ExecutionLimits) -> Self {
         self.execution_limits = limits;
+        self
+    }
+
+    /// Set execution mode
+    pub fn with_execution_mode(mut self, mode: ExecutionMode) -> Self {
+        self.execution_mode = mode;
         self
     }
 
@@ -531,5 +589,77 @@ mod tests {
         let deserialized: Task = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.description, task.description);
         assert_eq!(deserialized.domain_hint, task.domain_hint);
+    }
+
+    #[test]
+    fn test_execution_mode_parse() {
+        assert_eq!(
+            ExecutionMode::parse("generate-only"),
+            Some(ExecutionMode::GenerateOnly)
+        );
+        assert_eq!(
+            ExecutionMode::parse("generate_only"),
+            Some(ExecutionMode::GenerateOnly)
+        );
+        assert_eq!(
+            ExecutionMode::parse("generate"),
+            Some(ExecutionMode::GenerateOnly)
+        );
+        assert_eq!(
+            ExecutionMode::parse("execute"),
+            Some(ExecutionMode::Execute)
+        );
+        assert_eq!(ExecutionMode::parse("exec"), Some(ExecutionMode::Execute));
+        assert_eq!(
+            ExecutionMode::parse("execute-with-retry"),
+            Some(ExecutionMode::ExecuteWithRetry)
+        );
+        assert_eq!(
+            ExecutionMode::parse("execute_with_retry"),
+            Some(ExecutionMode::ExecuteWithRetry)
+        );
+        assert_eq!(
+            ExecutionMode::parse("retry"),
+            Some(ExecutionMode::ExecuteWithRetry)
+        );
+        assert_eq!(ExecutionMode::parse("invalid"), None);
+    }
+
+    #[test]
+    fn test_execution_mode_default() {
+        assert_eq!(ExecutionMode::default(), ExecutionMode::Execute);
+    }
+
+    #[test]
+    fn test_execution_mode_as_str() {
+        assert_eq!(ExecutionMode::GenerateOnly.as_str(), "generate-only");
+        assert_eq!(ExecutionMode::Execute.as_str(), "execute");
+        assert_eq!(
+            ExecutionMode::ExecuteWithRetry.as_str(),
+            "execute-with-retry"
+        );
+    }
+
+    #[test]
+    fn test_execution_mode_description() {
+        assert!(ExecutionMode::GenerateOnly
+            .description()
+            .to_lowercase()
+            .contains("generate"));
+        assert!(ExecutionMode::Execute
+            .description()
+            .to_lowercase()
+            .contains("files"));
+        assert!(ExecutionMode::ExecuteWithRetry
+            .description()
+            .to_lowercase()
+            .contains("retry"));
+    }
+
+    #[test]
+    fn test_agent_context_with_execution_mode() {
+        let config = AppConfig::default();
+        let ctx = AgentContext::new(config).with_execution_mode(ExecutionMode::GenerateOnly);
+        assert_eq!(ctx.execution_mode, ExecutionMode::GenerateOnly);
     }
 }
