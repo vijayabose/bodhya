@@ -9,6 +9,7 @@ use bodhya_core::{Agent, AgentCapability, AgentContext, AgentResult, Result, Tas
 use bodhya_model_registry::ModelRegistry;
 use std::sync::Arc;
 
+pub mod agentic_executor;
 mod bdd;
 mod impl_gen;
 mod planner;
@@ -18,6 +19,9 @@ pub mod tools; // NEW: Tool wrapper module
 pub mod validate;
 
 // Re-export public types
+pub use agentic_executor::{
+    AgenticExecutor, AttemptSummary, ErrorAnalysis, ErrorAnalyzer, ErrorCategory, ExecutionSummary,
+};
 pub use bdd::{BddGenerator, GherkinFeature, GherkinScenario, GherkinStep};
 pub use impl_gen::{ImplCode, ImplGenerator};
 pub use planner::{CodePlan, Planner};
@@ -112,9 +116,15 @@ impl CodeAgent {
         Some(CodeAgentTools::new(registry_arc, working_dir))
     }
 
-    /// Execute task with tools (Phase 8)
+    /// Execute task with tools (Phase 8/9)
     /// Full agentic code generation with file operations and test execution
-    async fn execute_with_tools(&self, task: &Task, tools: &CodeAgentTools) -> Result<String> {
+    /// Phase 9 adds agentic retry loop (ExecuteWithRetry mode)
+    async fn execute_with_tools(
+        &self,
+        task: &Task,
+        tools: &CodeAgentTools,
+        ctx: &AgentContext,
+    ) -> Result<String> {
         let mut output = String::new();
         output.push_str(&format!("# Executing: {}\n\n", task.description));
 
@@ -180,22 +190,76 @@ impl CodeAgent {
 
         output.push_str("## Step 6: Running Tests\n\n");
 
-        // Execute cargo test
+        // Check if retry mode is enabled (Phase 3)
+        use bodhya_core::ExecutionMode;
+        let use_retry = matches!(ctx.execution_mode, ExecutionMode::ExecuteWithRetry);
+
+        let final_impl = if use_retry {
+            output.push_str("*Using agentic retry loop (observe-retry-fix)*\n\n");
+            let max_iterations = ctx.execution_limits.max_iterations;
+            let executor = AgenticExecutor::new(Arc::clone(registry), max_iterations)?;
+
+            let (final_impl, summary) = executor
+                .execute_with_retry(
+                    impl_code.clone(),
+                    &test_code,
+                    &plan,
+                    tools,
+                    &test_path,
+                    &impl_path,
+                )
+                .await?;
+
+            output.push_str(&format!(
+                "Completed after {} iteration(s)\n",
+                summary.total_iterations
+            ));
+            if summary.successful {
+                output.push_str("✓ Tests PASSED\n\n");
+            } else {
+                output.push_str("✗ Tests FAILED after maximum retries\n\n");
+            }
+
+            output.push_str("Retry attempts:\n");
+            for attempt in &summary.attempts {
+                let status = if attempt.success {
+                    "✓ PASS"
+                } else {
+                    "✗ FAIL"
+                };
+                output.push_str(&format!("  {}. {} ", attempt.iteration, status));
+                if let Some(ref category) = attempt.error_category {
+                    output.push_str(&format!("({:?}, {} errors)", category, attempt.error_count));
+                }
+                output.push('\n');
+            }
+            output.push('\n');
+            final_impl
+        } else {
+            // Single execution without retry
+            let test_result = tools.run_cargo("test", &[]).await?;
+            if test_result.success {
+                output.push_str("✓ Tests PASSED\n\n");
+                output.push_str("```\n");
+                let stdout_lines: Vec<&str> = test_result.stdout.lines().collect();
+                let start = stdout_lines.len().saturating_sub(10);
+                output.push_str(&stdout_lines[start..].join("\n"));
+                output.push_str("\n```\n\n");
+            } else {
+                output.push_str("✗ Tests FAILED\n\n");
+                output.push_str("```\n");
+                output.push_str(&test_result.stderr);
+                output.push_str("\n```\n\n");
+            }
+            impl_code
+        };
+
+        // Step 7: Review the code (if tests passed)
         let test_result = tools.run_cargo("test", &[]).await?;
-
         if test_result.success {
-            output.push_str("✓ Tests PASSED\n\n");
-            output.push_str("```\n");
-            // Show last 10 lines of output
-            let stdout_lines: Vec<&str> = test_result.stdout.lines().collect();
-            let start = stdout_lines.len().saturating_sub(10);
-            output.push_str(&stdout_lines[start..].join("\n"));
-            output.push_str("\n```\n\n");
-
-            // Step 7: Review the code
             output.push_str("## Step 7: Code Review\n\n");
             let reviewer = CodeReviewer::new(Arc::clone(registry))?;
-            let review = reviewer.review(&impl_code, &plan, "Tests passed").await?;
+            let review = reviewer.review(&final_impl, &plan, "Tests passed").await?;
 
             match review.status {
                 ReviewStatus::Approved => output.push_str("✓ Code review: APPROVED\n"),
@@ -214,13 +278,6 @@ impl CodeAgent {
                 }
             }
             output.push('\n');
-        } else {
-            output.push_str("✗ Tests FAILED\n\n");
-            output.push_str("```\n");
-            output.push_str(&test_result.stderr);
-            output.push_str("\n```\n\n");
-            output.push_str("*Note: Agentic retry loop not yet implemented. ");
-            output.push_str("This will be added in Phase 3.*\n\n");
         }
 
         // Get execution statistics
@@ -379,9 +436,9 @@ impl Agent for CodeAgent {
     }
 
     async fn handle(&self, task: Task, ctx: AgentContext) -> Result<AgentResult> {
-        // Phase 8: Try tool-based execution first if tools are available
+        // Phase 8/9: Try tool-based execution first if tools are available
         if let Some(tools) = Self::get_tools_from_context(&ctx) {
-            match self.execute_with_tools(&task, &tools).await {
+            match self.execute_with_tools(&task, &tools, &ctx).await {
                 Ok(output) => return Ok(AgentResult::success(task.id, output)),
                 Err(e) => {
                     eprintln!(
