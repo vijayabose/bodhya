@@ -165,6 +165,9 @@ impl EvaluationRunner {
         let context = AgentContext {
             config: bodhya_core::AppConfig::default(),
             metadata: serde_json::Value::Null,
+            working_dir: None,
+            execution_limits: bodhya_core::ExecutionLimits::default(),
+            tools: None,
         };
 
         // Run the agent
