@@ -9,7 +9,7 @@ use clap::{Parser, Subcommand};
 use std::process;
 
 use bodhya_cli::config_templates::{ConfigTemplate, Profile};
-use bodhya_cli::{history_cmd, init_cmd, models_cmd, run_cmd, serve_cmd, tools_cmd};
+use bodhya_cli::{agents_cmd, history_cmd, init_cmd, models_cmd, run_cmd, serve_cmd, tools_cmd};
 
 #[derive(Parser)]
 #[command(name = "bodhya")]
@@ -36,6 +36,10 @@ enum Commands {
         #[arg(short, long)]
         force: bool,
     },
+
+    /// Agent information and management
+    #[command(subcommand)]
+    Agents(AgentsCommands),
 
     /// Model management commands
     #[command(subcommand)]
@@ -77,6 +81,18 @@ enum Commands {
         /// Host to bind to
         #[arg(long, default_value = "127.0.0.1")]
         host: String,
+    },
+}
+
+#[derive(Subcommand)]
+enum AgentsCommands {
+    /// List all available agents
+    List,
+
+    /// Show detailed information about a specific agent
+    Show {
+        /// Agent ID to show (e.g., "code", "mail")
+        agent_id: String,
     },
 }
 
@@ -194,6 +210,10 @@ async fn main() {
 
             init_cmd::init(profile, force)
         }
+        Commands::Agents(agents_cmd) => match agents_cmd {
+            AgentsCommands::List => agents_cmd::list_agents(),
+            AgentsCommands::Show { agent_id } => agents_cmd::show_agent(&agent_id),
+        },
         Commands::Models(models_cmd) => match models_cmd {
             ModelsCommands::List => models_cmd::list_models(),
             ModelsCommands::Install { model_id } => models_cmd::install_model(&model_id),
@@ -270,8 +290,29 @@ mod tests {
         let help = cli.render_help().to_string();
         assert!(help.contains("Bodhya"));
         assert!(help.contains("init"));
+        assert!(help.contains("agents"));
         assert!(help.contains("models"));
         assert!(help.contains("run"));
+    }
+
+    #[test]
+    fn test_agents_list_command() {
+        let cli = Cli::parse_from(["bodhya", "agents", "list"]);
+        match cli.command {
+            Commands::Agents(AgentsCommands::List) => {}
+            _ => panic!("Expected Agents List command"),
+        }
+    }
+
+    #[test]
+    fn test_agents_show_command() {
+        let cli = Cli::parse_from(["bodhya", "agents", "show", "code"]);
+        match cli.command {
+            Commands::Agents(AgentsCommands::Show { agent_id }) => {
+                assert_eq!(agent_id, "code");
+            }
+            _ => panic!("Expected Agents Show command"),
+        }
     }
 
     #[test]
