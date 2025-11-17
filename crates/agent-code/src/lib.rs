@@ -3,6 +3,7 @@
 /// Phase 5: Minimal stub with static responses
 /// Phase 6: Planner and BDD/Gherkin generation
 /// Phase 7: TDD, implementation generation, and review (current)
+/// Phase 8: Tool integration with CodeAgentTools (v1.1)
 use async_trait::async_trait;
 use bodhya_core::{Agent, AgentCapability, AgentContext, AgentResult, Result, Task};
 use bodhya_model_registry::ModelRegistry;
@@ -13,6 +14,7 @@ mod impl_gen;
 mod planner;
 mod review;
 mod tdd;
+pub mod tools; // NEW: Tool wrapper module
 pub mod validate;
 
 // Re-export public types
@@ -21,6 +23,7 @@ pub use impl_gen::{ImplCode, ImplGenerator};
 pub use planner::{CodePlan, Planner};
 pub use review::{CodeReview, CodeReviewer, ReviewStatus, ReviewSuggestion, SuggestionPriority};
 pub use tdd::{TddGenerator, TestCode};
+pub use tools::{CodeAgentTools, CommandOutput, ExecutionStats}; // NEW
 pub use validate::{CodeValidator, ValidationResult, ValidationSummary};
 
 /// Code generation agent
