@@ -3,6 +3,8 @@
 /// This module handles the end-to-end task execution pipeline:
 /// task intake -> routing -> agent execution -> result collection -> logging
 use bodhya_core::{AgentContext, AgentResult, AppConfig, Task};
+use bodhya_tools_mcp::ToolRegistry;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::engagement::EngagementManager;
@@ -16,18 +18,48 @@ pub struct TaskOrchestrator {
     engagement: EngagementManager,
     /// Application configuration
     config: AppConfig,
+    /// Tool registry for file/command operations
+    tools: Arc<ToolRegistry>,
+    /// Working directory for file operations
+    working_dir: Option<PathBuf>,
 }
 
 impl TaskOrchestrator {
     /// Create a new orchestrator
     pub fn new(config: AppConfig) -> Self {
         let engagement = EngagementManager::new(config.engagement_mode.clone());
+        let tools = Arc::new(ToolRegistry::with_defaults());
 
         Self {
             router: AgentRouter::new(),
             engagement,
             config,
+            tools,
+            working_dir: None,
         }
+    }
+
+    /// Create a new orchestrator with custom tools
+    pub fn with_tools(config: AppConfig, tools: Arc<ToolRegistry>) -> Self {
+        let engagement = EngagementManager::new(config.engagement_mode.clone());
+
+        Self {
+            router: AgentRouter::new(),
+            engagement,
+            config,
+            tools,
+            working_dir: None,
+        }
+    }
+
+    /// Set the working directory for file operations
+    pub fn set_working_dir(&mut self, working_dir: impl Into<PathBuf>) {
+        self.working_dir = Some(working_dir.into());
+    }
+
+    /// Get a reference to the tool registry
+    pub fn tools(&self) -> &Arc<ToolRegistry> {
+        &self.tools
     }
 
     /// Get a mutable reference to the router (for registering agents)
@@ -71,8 +103,14 @@ impl TaskOrchestrator {
             "Selected agent for task"
         );
 
-        // Create agent context
-        let context = AgentContext::new(self.config.clone());
+        // Create agent context with tools and working directory
+        let mut context = AgentContext::new(self.config.clone())
+            .with_tools(Arc::clone(&self.tools) as Arc<dyn std::any::Any + Send + Sync>);
+
+        // Set working directory if specified
+        if let Some(ref wd) = self.working_dir {
+            context = context.with_working_dir(wd.clone());
+        }
 
         // Execute task through agent
         let start_time = std::time::Instant::now();
@@ -136,6 +174,8 @@ impl TaskOrchestrator {
             router: self.router.clone(),
             engagement: self.engagement.clone(),
             config: self.config.clone(),
+            tools: Arc::clone(&self.tools),
+            working_dir: self.working_dir.clone(),
         })
     }
 }

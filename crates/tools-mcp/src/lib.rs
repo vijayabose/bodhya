@@ -6,13 +6,17 @@
 // Re-export core tool types for convenience
 pub use bodhya_core::{McpClient, McpServerConfig, Tool, ToolRequest, ToolResponse};
 
+mod edit_tool;
 mod fs_tool;
 mod mcp_client;
+mod search_tool;
 mod shell_tool;
 
 // Re-export tool implementations
+pub use edit_tool::{EditOperation, EditResult, EditTool};
 pub use fs_tool::FilesystemTool;
 pub use mcp_client::BasicMcpClient;
+pub use search_tool::{SearchMatch, SearchResult, SearchTool};
 pub use shell_tool::ShellTool;
 
 /// Tool registry for managing available tools
@@ -26,11 +30,13 @@ impl ToolRegistry {
         Self { tools: Vec::new() }
     }
 
-    /// Create a tool registry with default tools (filesystem and shell)
+    /// Create a tool registry with default tools (filesystem, shell, edit, search)
     pub fn with_defaults() -> Self {
         let mut registry = Self::new();
         registry.register(Box::new(FilesystemTool::new()));
         registry.register(Box::new(ShellTool::new()));
+        registry.register(Box::new(EditTool::new()));
+        registry.register(Box::new(SearchTool::new()));
         registry
     }
 
@@ -85,6 +91,8 @@ mod tests {
 
         assert!(tools.contains(&"filesystem".to_string()));
         assert!(tools.contains(&"shell".to_string()));
+        assert!(tools.contains(&"edit".to_string()));
+        assert!(tools.contains(&"search".to_string()));
     }
 
     #[test]

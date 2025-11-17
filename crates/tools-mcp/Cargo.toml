@@ -17,6 +17,8 @@ anyhow.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 shell-words.workspace = true
+regex = "1.11"
+glob = "0.3"
 
 [dev-dependencies]
 tempfile.workspace = true

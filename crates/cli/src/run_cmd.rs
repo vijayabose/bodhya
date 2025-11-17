@@ -10,13 +10,38 @@ use std::sync::Arc;
 use crate::utils;
 
 /// Run a task through the controller
-pub async fn run_task(domain: Option<String>, task_description: String) -> Result<()> {
+pub async fn run_task(
+    domain: Option<String>,
+    working_dir: Option<String>,
+    task_description: String,
+) -> Result<()> {
     // Check if initialized
     if !utils::is_initialized() {
         return Err(bodhya_core::Error::Config(
             "Bodhya is not initialized. Run 'bodhya init' first.".to_string(),
         ));
     }
+
+    // Validate and resolve working directory
+    let working_dir_path = if let Some(dir) = working_dir {
+        let path = std::path::PathBuf::from(&dir);
+        if !path.exists() {
+            return Err(bodhya_core::Error::Config(format!(
+                "Working directory does not exist: {}",
+                dir
+            )));
+        }
+        if !path.is_dir() {
+            return Err(bodhya_core::Error::Config(format!(
+                "Path is not a directory: {}",
+                dir
+            )));
+        }
+        Some(path)
+    } else {
+        // Default to current directory
+        std::env::current_dir().ok()
+    };
 
     // Load config
     let config_path = utils::default_config_path()?;
@@ -38,7 +63,13 @@ pub async fn run_task(domain: Option<String>, task_description: String) -> Resul
         .map_err(|e| bodhya_core::Error::Config(format!("Failed to parse config: {}", e)))?;
 
     // Initialize orchestrator with code agent
+    // Note: TaskOrchestrator::new() already creates ToolRegistry with defaults
     let mut orchestrator = TaskOrchestrator::new(config);
+
+    // Set working directory if specified
+    if let Some(wd) = working_dir_path {
+        orchestrator.set_working_dir(wd);
+    }
 
     // Register CodeAgent (Phase 5: only code agent)
     let code_agent = Arc::new(CodeAgent::new());
@@ -129,7 +160,7 @@ mod tests {
             std::fs::create_dir_all(&config_dir).unwrap();
 
             let rt = tokio::runtime::Handle::current();
-            let result = rt.block_on(run_task(None, "test task".to_string()));
+            let result = rt.block_on(run_task(None, None, "test task".to_string()));
             assert!(result.is_err());
             assert!(result.unwrap_err().to_string().contains("not found"));
         });
@@ -144,6 +175,7 @@ mod tests {
 
             let rt = tokio::runtime::Handle::current();
             let result = rt.block_on(run_task(
+                None,
                 None,
                 "Generate a hello world function".to_string(),
             ));
@@ -161,6 +193,7 @@ mod tests {
             let rt = tokio::runtime::Handle::current();
             let result = rt.block_on(run_task(
                 Some("code".to_string()),
+                None,
                 "Generate code".to_string(),
             ));
             assert!(result.is_ok());
@@ -177,7 +210,7 @@ mod tests {
 
             let rt = tokio::runtime::Handle::current();
             for task in tasks {
-                let result = rt.block_on(run_task(None, task.to_string()));
+                let result = rt.block_on(run_task(None, None, task.to_string()));
                 assert!(result.is_ok());
             }
         });
