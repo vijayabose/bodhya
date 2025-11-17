@@ -1,11 +1,12 @@
 # Bodhya Tool Integration - Quick Reference Checklist
 
 **Version**: 1.1
-**Status**: Phase 1 & 2 (Partial) Complete - In Progress
+**Status**: Phase 1 Complete, Phase 2 Week 3 Complete - Ready for MCP
 **Target**: v1.1 Release
-**Duration**: 7-9 weeks (4 core phases + MCP extensibility phase)
+**Duration**: 6-7 weeks (revised: skip custom GitTool, use MCP)
 **Last Updated**: 2025-11-17
 **Scope Decision**: ✅ MCP extensibility (Phase 2.5) INCLUDED in v1.1
+**Revised Approach**: ✅ Skip custom GitTool - use git via MCP server
 
 ---
 
@@ -48,16 +49,16 @@
 ### Week 2: Agent & CLI Integration
 
 **CodeAgent Execution** (`crates/agent-code/`)
-- [ ] Update `handle()` to use `AgentContext`
-- [ ] Update `generate_with_tdd()` signature
-- [ ] Extract tools from context
-- [ ] Write test file to disk
-- [ ] Write implementation file to disk
-- [ ] Execute `cargo test`
-- [ ] Parse test output
-- [ ] Handle execution errors
-- [ ] Update fallback behavior
-- [ ] Write execution tests
+- [x] Update `handle()` to use `AgentContext`
+- [x] Extract tools from context via `get_tools_from_context()`
+- [x] Write test file to disk via `tools.write_file()`
+- [x] Write implementation file to disk via `tools.write_file()`
+- [x] Execute `cargo test` via `tools.run_cargo()`
+- [x] Parse test output (success/failure detection)
+- [x] Handle execution errors (graceful error reporting)
+- [x] Update fallback behavior (falls back to model-based)
+- [x] Write execution tests (`test_determine_file_paths()`)
+- [x] Implement full 7-step TDD workflow in `execute_with_tools()`
 
 **CLI Updates** (`crates/cli/`)
 - [x] Add `--working-dir` flag
@@ -115,40 +116,40 @@
 - [ ] Add `find_definition()` method
 - [x] Write tests for new methods
 
-### Week 4: Git Tool & Integration
+### Week 4: ~~Git Tool~~ SKIPPED - Using Git via MCP Instead
 
-**GitTool** (`crates/tools-mcp/`)
-- [ ] Create `src/git_tool.rs`
-- [ ] Define `GitTool` struct
-- [ ] Define `GitStatus` struct
-- [ ] Implement `status` operation
-- [ ] Implement `diff` operations
-- [ ] Implement `add` operation
-- [ ] Implement `commit` operation
-- [ ] Implement `push` operation (with safety)
-- [ ] Implement `pull` operation
-- [ ] Implement `branch` operations
-- [ ] Implement `log` operation
-- [ ] Add safety checks
-- [ ] Write comprehensive tests
-- [ ] Register in `ToolRegistry`
+> **DECISION**: Skip custom GitTool implementation
+> **RATIONALE**: Use MCP server for git functionality instead
+> **BENEFITS**:
+> - Validates MCP architecture early with real-world use case
+> - Saves 2-3 hours of implementation time
+> - Leverages existing git MCP servers (proven and tested)
+> - Demonstrates extensibility vision
+> - Smaller core codebase
 
-**CodeAgentTools Git Extensions**
-- [ ] Add `git_status()` method
-- [ ] Add `git_diff()` method
-- [ ] Add `git_add()` method
-- [ ] Add `git_commit()` method
-- [ ] Add `git_push()` method
-- [ ] Write git integration tests
+**GitTool** (`crates/tools-mcp/`) - ⏭️ **SKIPPED - Will use MCP**
+- [~] ~~Create `src/git_tool.rs`~~ - Use git MCP server instead
+- [~] ~~Define `GitTool` struct~~ - Use MCP client
+- [~] ~~Define `GitStatus` struct~~ - MCP handles this
+- [~] ~~Implement `status` operation~~ - Via MCP
+- [~] ~~Implement `diff` operations~~ - Via MCP
+- [~] ~~Implement `add` operation~~ - Via MCP
+- [~] ~~Implement `commit` operation~~ - Via MCP
+- [~] ~~Implement `push` operation (with safety)~~ - Via MCP
+- [~] ~~Implement `pull` operation~~ - Via MCP
+- [~] ~~Implement `branch` operations~~ - Via MCP
+- [~] ~~Implement `log` operation~~ - Via MCP
+- [~] ~~Add safety checks~~ - MCP server handles this
+- [~] ~~Write comprehensive tests~~ - MCP integration tests instead
+- [~] ~~Register in `ToolRegistry`~~ - MCP auto-discovery
 
-**Advanced Integration Testing**
-- [ ] Create `tests/integration/advanced_tools_test.rs`
-- [ ] Test file editing workflow
-- [ ] Test code search workflow
-- [ ] Test git workflow
-- [ ] Test combined tool usage
-- [ ] Run full test suite
-- [ ] Run quality gates
+**CodeAgentTools Git Extensions** - ⏭️ **DEFERRED to post-MCP**
+- [ ] Add git support via MCP client (Phase 2.5)
+- [ ] Test git operations via MCP (Phase 2.5)
+
+**Advanced Integration Testing** - ⏭️ **MOVED to Phase 2.5**
+- [ ] Test git workflow via MCP server
+- [ ] Test combined tool usage with MCP tools
 
 ---
 
@@ -414,14 +415,15 @@ reqwest = "0.11"      # MCP - HTTP client (for HttpMcpClient)
 ### Functional
 - [x] Tools infrastructure exists
 - [x] Tools connected to agents (via AgentContext)
-- [ ] CodeAgent writes actual files (infrastructure ready, execution pending)
-- [ ] CodeAgent executes commands (infrastructure ready, execution pending)
+- [x] CodeAgent writes actual files (✅ COMPLETE - writes test & impl files)
+- [x] CodeAgent executes commands (✅ COMPLETE - runs cargo test)
 - [ ] CodeAgent iterates on failures (pending Phase 3)
 - [x] EditTool functional
 - [x] SearchTool functional
-- [ ] GitTool functional (pending Phase 2 Week 4)
-- [ ] MCP server integration working (Phase 2.5 - INCLUDED in v1.1)
-- [ ] External tools loadable via CLI (Phase 2.5 - INCLUDED in v1.1)
+- [~] GitTool functional (⏭️ SKIPPED - using git via MCP instead)
+- [ ] MCP server integration working (Phase 2.5 - NEXT)
+- [ ] External tools loadable via CLI (Phase 2.5 - NEXT)
+- [ ] Git operations via MCP (Phase 2.5 - validates architecture)
 - [ ] End-to-end workflows complete (pending Phase 3 & 4)
 
 ### Quality
@@ -502,12 +504,22 @@ reqwest = "0.11"      # MCP - HTTP client (for HttpMcpClient)
 - ✅ Tool extensibility design created
 - ✅ Implementation summary created
 - ✅ **Phase 1 Week 1: Core Types & Infrastructure - COMPLETE**
-- ✅ **Phase 1 Week 2: Agent & CLI Integration - MOSTLY COMPLETE**
+- ✅ **Phase 1 Week 2: Agent & CLI Integration - COMPLETE** (except --execution-mode flag)
 - ✅ **Phase 2 Week 3: Edit & Search Tools - COMPLETE**
+- ⏭️ **Phase 2 Week 4: Git Tool - SKIPPED** (using git via MCP instead)
 
 **Implementation Summary (as of 2025-11-17):**
 - ✅ ExecutionLimits added to AgentContext with defaults (3 max iterations, 20 file writes, 10 commands, 300s timeout)
 - ✅ CodeAgentTools wrapper implemented with 13 comprehensive tests
+- ✅ **CodeAgent execution COMPLETE** - Full 7-step TDD workflow:
+  * Step 1: Planning (Planner)
+  * Step 2: BDD Features (BddGenerator)
+  * Step 3: Tests/RED Phase (TddGenerator)
+  * Step 4: Implementation/GREEN Phase (ImplGenerator)
+  * Step 5: Write files to disk (tools.write_file)
+  * Step 6: Run tests (tools.run_cargo)
+  * Step 7: Code Review (CodeReviewer)
+- ✅ File path determination (fibonacci, factorial, hello, default patterns)
 - ✅ EditTool fully implemented with replace, patch, insert, delete operations
 - ✅ SearchTool fully implemented with grep, recursive search, regex, filtering
 - ✅ --working-dir CLI flag added and functional
@@ -517,41 +529,64 @@ reqwest = "0.11"      # MCP - HTTP client (for HttpMcpClient)
 - ✅ All quality gates passing (fmt, clippy, test, audit)
 - ✅ Eval harnesses updated for new AgentContext structure
 
-**Next Steps:**
+**Next Steps (REVISED APPROACH):**
 1. ✅ ~~Phase 1 Complete~~
 2. ✅ ~~Phase 2 Week 3 Complete~~
-3. ⏭️ **Implement GitTool (Phase 2 Week 4)** - status/diff/add/commit/push operations
-4. ⏭️ **Implement CodeAgent execution with tools (Phase 1 Week 2)** - actual file writing and test execution
-5. ⏭️ **Implement MCP Server Extensibility (Phase 2.5)** - CLI tool management, MCP client, external tool loading
-6. ⏭️ **Implement Agentic Execution Loop (Phase 3)** - observe-retry-fix workflow
-7. ⏭️ **Polish & Documentation (Phase 4)** - examples, guides, optimization
+3. ⏭️ **Add `--execution-mode` CLI flag** (15-30 min) - Completes Phase 1 entirely
+4. ⏭️ **Implement MCP Extensibility (Phase 2.5)** (2-3 days) - PRIORITY
+   - Full MCP client (JSON-RPC 2.0)
+   - CLI tool management (`bodhya tools add-mcp`, etc.)
+   - **Use git MCP server as first integration** (validates architecture)
+   - External tool discovery and loading
+5. ⏭️ **Implement Agentic Execution Loop (Phase 3)** (1-2 days)
+   - Observe-retry-fix workflow
+   - Error analysis and refinement
+6. ⏭️ **Polish & Documentation (Phase 4)** (1-2 days)
 
 **Recommended Implementation Order:**
-- **Option C (Parallel Track)**: Implement Phase 2 Week 4 (GitTool), then Phase 2.5 (MCP) in parallel with Phase 3 (Agentic Loop)
-- **Estimated Timeline**: 7 weeks total (current + 5-6 more weeks)
+- ✅ **Revised approach adopted**: Skip custom GitTool, jump to MCP
+- **Estimated Timeline**: 6-7 weeks total (saved 1-2 weeks)
 - **Target Completion**: Early 2025
+- **Git functionality**: Via MCP server (cleaner, faster, proves extensibility)
 
 ## Implementation Options
 
-### ✅ Selected: Option C - Parallel Track (7 weeks)
-**DECISION**: Implement MCP extensibility in parallel with Phase 3
-- **Timeline**: 7 weeks total
+### ✅ Selected: Revised Approach - Skip GitTool, Prioritize MCP (6-7 weeks)
+**DECISION**: Skip custom GitTool, use MCP server for git functionality
+- **Timeline**: 6-7 weeks total (saved 1-2 weeks)
 - **Scope**: All phases (1-4) + Phase 2.5 (MCP extensibility)
 - **Outcome**: Complete tool integration with external tool extensibility
-- **Approach**:
-  - Week 4: GitTool implementation
-  - Weeks 5-6: MCP extensibility (Phase 2.5) in parallel with Agentic Loop (Phase 3)
+- **Revised Approach**:
+  - ✅ Phase 1: Complete (Core + CodeAgent execution)
+  - Week 4: Add --execution-mode flag + Start MCP implementation
+  - Weeks 5-6: MCP extensibility (Phase 2.5) with git MCP as proof-of-concept
+  - Week 6-7: Agentic Execution Loop (Phase 3)
   - Week 7: Polish & Documentation (Phase 4)
+
+**Why This Is Better:**
+- ✅ Validates MCP architecture early with real git use case
+- ✅ Saves 2-3 hours of GitTool implementation time
+- ✅ Leverages proven git MCP servers from ecosystem
+- ✅ Smaller core codebase (less maintenance)
+- ✅ Better demonstrates extensibility vision
+- ✅ Git functionality via MCP server (proven and tested)
 
 ### Alternative Options (Not Selected)
 
 **Option A: Full Feature Set Sequential (9 weeks)**
 - All phases implemented sequentially
 - More thorough but slower
+- Includes custom GitTool (2-3 hours extra work)
 
 **Option B: Core Features Only (6 weeks)**
 - Defer MCP to v1.2
 - Faster initial release but incomplete extensibility story
+- Missing validation of MCP architecture
+
+**Original Option C: GitTool then MCP (7-8 weeks)**
+- Implement custom GitTool first
+- Then do MCP extensibility
+- Duplicates functionality that MCP provides
 
 ---
 
