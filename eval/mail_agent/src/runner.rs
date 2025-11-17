@@ -171,6 +171,7 @@ impl EvaluationRunner {
             metadata: serde_json::Value::Null,
             working_dir: None,
             execution_limits: bodhya_core::ExecutionLimits::default(),
+            execution_mode: bodhya_core::ExecutionMode::default(),
             tools: None,
         };
 
