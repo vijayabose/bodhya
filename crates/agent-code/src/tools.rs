@@ -308,6 +308,114 @@ impl CodeAgentTools {
         cargo_args.extend_from_slice(args);
         self.run_command("cargo", &cargo_args).await
     }
+
+    /// Edit a file with the specified operation
+    ///
+    /// # Arguments
+    /// * `path` - Path to the file to edit (relative or absolute)
+    /// * `operation` - The edit operation to perform (replace, insert, delete, patch)
+    /// * `dry_run` - If true, validate the operation without applying changes
+    ///
+    /// # Returns
+    /// A tuple of (success, modified_content, changes_made, error_message)
+    pub async fn edit_file(
+        &self,
+        path: impl AsRef<Path>,
+        operation: serde_json::Value,
+        dry_run: bool,
+    ) -> Result<(bool, String, usize, Option<String>)> {
+        let resolved = self.resolve_path(path);
+        let path_str = resolved
+            .to_str()
+            .ok_or_else(|| bodhya_core::Error::Tool("Invalid path encoding".to_string()))?;
+
+        let request = ToolRequest::new(
+            "edit",
+            "edit",
+            serde_json::json!({
+                "path": path_str,
+                "operation": operation,
+                "dry_run": dry_run
+            }),
+        );
+
+        let response = self.registry.execute(request).await?;
+
+        if response.success {
+            let modified_content = response.data["modified_content"]
+                .as_str()
+                .unwrap_or("")
+                .to_string();
+            let changes_made = response.data["changes_made"].as_u64().unwrap_or(0) as usize;
+            let error = response.data["error"].as_str().map(|s| s.to_string());
+
+            Ok((true, modified_content, changes_made, error))
+        } else {
+            let error_msg = response
+                .error
+                .unwrap_or_else(|| "Failed to edit file".to_string());
+            Err(bodhya_core::Error::Tool(error_msg))
+        }
+    }
+
+    /// Search for code patterns in files
+    ///
+    /// # Arguments
+    /// * `path` - Path to search in (file or directory)
+    /// * `pattern` - Regular expression pattern to search for
+    /// * `recursive` - Whether to search recursively in subdirectories
+    /// * `case_sensitive` - Whether the search should be case-sensitive
+    /// * `file_pattern` - Optional file pattern to filter (e.g., "*.rs")
+    /// * `context_lines` - Number of context lines to show before/after matches
+    ///
+    /// # Returns
+    /// A tuple of (success, matches, total_count, files_searched, error_message)
+    pub async fn search_code(
+        &self,
+        path: impl AsRef<Path>,
+        pattern: &str,
+        recursive: bool,
+        case_sensitive: bool,
+        file_pattern: Option<&str>,
+        context_lines: usize,
+    ) -> Result<(bool, Vec<serde_json::Value>, usize, usize, Option<String>)> {
+        let resolved = self.resolve_path(path);
+        let path_str = resolved
+            .to_str()
+            .ok_or_else(|| bodhya_core::Error::Tool("Invalid path encoding".to_string()))?;
+
+        let request = ToolRequest::new(
+            "search",
+            "grep",
+            serde_json::json!({
+                "path": path_str,
+                "pattern": pattern,
+                "recursive": recursive,
+                "case_sensitive": case_sensitive,
+                "file_pattern": file_pattern,
+                "context_lines": context_lines
+            }),
+        );
+
+        let response = self.registry.execute(request).await?;
+
+        if response.success {
+            let matches = response.data["matches"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default();
+            let total_matches = response.data["total_matches"].as_u64().unwrap_or(0) as usize;
+            let files_searched = response.data["files_searched"].as_u64().unwrap_or(0) as usize;
+            let error = response.data["error"].as_str().map(|s| s.to_string());
+
+            Ok((true, matches, total_matches, files_searched, error))
+        } else {
+            let error_msg = response
+                .error
+                .unwrap_or_else(|| "Failed to search code".to_string());
+            Err(bodhya_core::Error::Tool(error_msg))
+        }
+    }
 }
 
 #[cfg(test)]
