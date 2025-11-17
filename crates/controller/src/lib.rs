@@ -230,12 +230,8 @@ mod integration_tests {
             }
 
             fn capability(&self) -> AgentCapability {
-                AgentCapability::new(
-                    "test",
-                    vec!["test".to_string()],
-                    "Tool-aware test agent",
-                )
-                .with_keywords(vec!["tool".to_string(), "test".to_string()])
+                AgentCapability::new("test", vec!["test".to_string()], "Tool-aware test agent")
+                    .with_keywords(vec!["tool".to_string(), "test".to_string()])
             }
 
             async fn handle(
@@ -244,9 +240,7 @@ mod integration_tests {
                 ctx: AgentContext,
             ) -> bodhya_core::Result<AgentResult> {
                 // Verify tools are available in context
-                let tools = ctx
-                    .tools
-                    .expect("Tools should be available in context");
+                let tools = ctx.tools.expect("Tools should be available in context");
 
                 // Downcast to ToolRegistry
                 let _registry = tools
