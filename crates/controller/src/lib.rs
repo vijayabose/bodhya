@@ -214,4 +214,81 @@ mod integration_tests {
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), bodhya_core::Error::Agent(_)));
     }
+
+    /// Integration test: Agent can access tools from context
+    #[tokio::test]
+    async fn test_agent_can_access_tools() {
+        use bodhya_tools_mcp::ToolRegistry;
+
+        // Mock agent that accesses tools from context
+        struct ToolAwareAgent;
+
+        #[async_trait]
+        impl Agent for ToolAwareAgent {
+            fn id(&self) -> &'static str {
+                "tool-test"
+            }
+
+            fn capability(&self) -> AgentCapability {
+                AgentCapability::new(
+                    "test",
+                    vec!["test".to_string()],
+                    "Tool-aware test agent",
+                )
+                .with_keywords(vec!["tool".to_string(), "test".to_string()])
+            }
+
+            async fn handle(
+                &self,
+                task: Task,
+                ctx: AgentContext,
+            ) -> bodhya_core::Result<AgentResult> {
+                // Verify tools are available in context
+                let tools = ctx
+                    .tools
+                    .expect("Tools should be available in context");
+
+                // Downcast to ToolRegistry
+                let _registry = tools
+                    .downcast_ref::<ToolRegistry>()
+                    .expect("Should be able to downcast to ToolRegistry");
+
+                Ok(AgentResult::success(
+                    task.id,
+                    "Successfully accessed tools from context",
+                ))
+            }
+        }
+
+        let config = create_test_config();
+        let mut orchestrator = TaskOrchestrator::new(config);
+
+        // Register tool-aware agent
+        orchestrator.router_mut().register(Arc::new(ToolAwareAgent));
+
+        // Execute task that requires tools
+        let task = Task::new("Test tool access").with_domain("test");
+        let result = orchestrator.execute(task).await.unwrap();
+
+        assert!(result.success);
+        assert!(result.content.contains("Successfully accessed tools"));
+    }
+
+    /// Integration test: Verify ToolRegistry is properly initialized
+    #[test]
+    fn test_orchestrator_has_tools() {
+        let config = create_test_config();
+        let orchestrator = TaskOrchestrator::new(config);
+
+        let tools = orchestrator.tools();
+
+        // Verify it has default tools registered
+        assert!(tools.get_tool("filesystem").is_some());
+        assert!(tools.get_tool("shell").is_some());
+
+        // Verify tools list
+        let tool_list = tools.list_tools();
+        assert!(tool_list.contains(&"filesystem".to_string()));
+        assert!(tool_list.contains(&"shell".to_string()));
+    }
 }
