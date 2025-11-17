@@ -62,7 +62,7 @@
 
 **CLI Updates** (`crates/cli/`)
 - [x] Add `--working-dir` flag
-- [ ] Add `--execution-mode` flag
+- [x] Add `--execution-mode` flag
 - [x] Validate working directory
 - [x] Create `ToolRegistry::with_defaults()`
 - [x] Pass tools to controller
@@ -504,7 +504,7 @@ reqwest = "0.11"      # MCP - HTTP client (for HttpMcpClient)
 - ✅ Tool extensibility design created
 - ✅ Implementation summary created
 - ✅ **Phase 1 Week 1: Core Types & Infrastructure - COMPLETE**
-- ✅ **Phase 1 Week 2: Agent & CLI Integration - COMPLETE** (except --execution-mode flag)
+- ✅ **Phase 1 Week 2: Agent & CLI Integration - COMPLETE**
 - ✅ **Phase 2 Week 3: Edit & Search Tools - COMPLETE**
 - ⏭️ **Phase 2 Week 4: Git Tool - SKIPPED** (using git via MCP instead)
 
@@ -530,10 +530,10 @@ reqwest = "0.11"      # MCP - HTTP client (for HttpMcpClient)
 - ✅ Eval harnesses updated for new AgentContext structure
 
 **Next Steps (REVISED APPROACH):**
-1. ✅ ~~Phase 1 Complete~~
-2. ✅ ~~Phase 2 Week 3 Complete~~
-3. ⏭️ **Add `--execution-mode` CLI flag** (15-30 min) - Completes Phase 1 entirely
-4. ⏭️ **Implement MCP Extensibility (Phase 2.5)** (2-3 days) - PRIORITY
+1. ✅ Phase 1 Complete
+2. ✅ Phase 2 Week 3 Complete
+3. ✅ --execution-mode CLI flag Complete
+4. 🔄 **Implement MCP Extensibility (Phase 2.5)** (2-3 days) - IN PROGRESS
    - Full MCP client (JSON-RPC 2.0)
    - CLI tool management (`bodhya tools add-mcp`, etc.)
    - **Use git MCP server as first integration** (validates architecture)

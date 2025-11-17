@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::model::{EngagementMode, ModelRole};
+use crate::tool::McpServerConfig;
 
 /// Main application configuration
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -26,6 +27,10 @@ pub struct AppConfig {
     /// Model configurations
     #[serde(default)]
     pub models: ModelConfigs,
+
+    /// Tools configuration
+    #[serde(default)]
+    pub tools: ToolsConfig,
 
     /// Paths configuration
     #[serde(default)]
@@ -47,6 +52,7 @@ impl Default for AppConfig {
             engagement_mode: EngagementMode::default(),
             agents: HashMap::new(),
             models: ModelConfigs::default(),
+            tools: ToolsConfig::default(),
             paths: PathsConfig::default(),
             logging: LoggingConfig::default(),
         }
@@ -174,6 +180,58 @@ impl Default for ModelDefaults {
             temperature: default_temperature(),
             max_tokens: default_max_tokens(),
         }
+    }
+}
+
+/// Tools configuration
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ToolsConfig {
+    /// Builtin tools to enable
+    #[serde(default = "default_builtin_tools")]
+    pub builtin: Vec<String>,
+
+    /// MCP server configurations
+    #[serde(default)]
+    pub mcp_servers: Vec<McpServerConfig>,
+}
+
+fn default_builtin_tools() -> Vec<String> {
+    vec![
+        "filesystem".to_string(),
+        "shell".to_string(),
+        "edit".to_string(),
+        "search".to_string(),
+    ]
+}
+
+impl Default for ToolsConfig {
+    fn default() -> Self {
+        Self {
+            builtin: default_builtin_tools(),
+            mcp_servers: Vec::new(),
+        }
+    }
+}
+
+impl ToolsConfig {
+    /// Get all enabled MCP servers
+    pub fn enabled_mcp_servers(&self) -> Vec<&McpServerConfig> {
+        self.mcp_servers
+            .iter()
+            .filter(|server| server.enabled)
+            .collect()
+    }
+
+    /// Find MCP server by name
+    pub fn find_mcp_server(&self, name: &str) -> Option<&McpServerConfig> {
+        self.mcp_servers.iter().find(|server| server.name == name)
+    }
+
+    /// Find mutable MCP server by name
+    pub fn find_mcp_server_mut(&mut self, name: &str) -> Option<&mut McpServerConfig> {
+        self.mcp_servers
+            .iter_mut()
+            .find(|server| server.name == name)
     }
 }
 
@@ -391,5 +449,78 @@ mod tests {
             Some(&"planner-1".to_string())
         );
         assert_eq!(agent_config.get_model(&ModelRole::Coder), None);
+    }
+
+    #[test]
+    fn test_tools_config_default() {
+        let tools = ToolsConfig::default();
+        assert_eq!(tools.builtin.len(), 4);
+        assert!(tools.builtin.contains(&"filesystem".to_string()));
+        assert!(tools.builtin.contains(&"shell".to_string()));
+        assert!(tools.builtin.contains(&"edit".to_string()));
+        assert!(tools.builtin.contains(&"search".to_string()));
+        assert!(tools.mcp_servers.is_empty());
+    }
+
+    #[test]
+    fn test_tools_config_enabled_servers() {
+        use crate::tool::McpServerConfig;
+
+        let mut tools = ToolsConfig::default();
+        tools.mcp_servers.push(McpServerConfig::new_stdio(
+            "server1",
+            vec!["cmd1".to_string()],
+        ));
+        tools.mcp_servers.push(
+            McpServerConfig::new_stdio("server2", vec!["cmd2".to_string()]).with_enabled(false),
+        );
+        tools.mcp_servers.push(McpServerConfig::new_stdio(
+            "server3",
+            vec!["cmd3".to_string()],
+        ));
+
+        let enabled = tools.enabled_mcp_servers();
+        assert_eq!(enabled.len(), 2);
+        assert!(enabled.iter().any(|s| s.name == "server1"));
+        assert!(enabled.iter().any(|s| s.name == "server3"));
+        assert!(!enabled.iter().any(|s| s.name == "server2"));
+    }
+
+    #[test]
+    fn test_tools_config_find_server() {
+        use crate::tool::McpServerConfig;
+
+        let mut tools = ToolsConfig::default();
+        tools.mcp_servers.push(McpServerConfig::new_stdio(
+            "test-server",
+            vec!["test".to_string()],
+        ));
+
+        let found = tools.find_mcp_server("test-server");
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().name, "test-server");
+
+        let not_found = tools.find_mcp_server("nonexistent");
+        assert!(not_found.is_none());
+    }
+
+    #[test]
+    fn test_tools_config_find_server_mut() {
+        use crate::tool::McpServerConfig;
+
+        let mut tools = ToolsConfig::default();
+        tools.mcp_servers.push(McpServerConfig::new_stdio(
+            "test-server",
+            vec!["test".to_string()],
+        ));
+
+        let found = tools.find_mcp_server_mut("test-server");
+        assert!(found.is_some());
+
+        if let Some(server) = found {
+            server.enabled = false;
+        }
+
+        assert!(!tools.mcp_servers[0].enabled);
     }
 }

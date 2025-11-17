@@ -114,6 +114,9 @@ pub struct McpServerConfig {
     pub name: String,
     /// Server type (e.g., "stdio", "http")
     pub server_type: String,
+    /// Whether this server is enabled
+    #[serde(default = "default_enabled")]
+    pub enabled: bool,
     /// Command to start the server (for stdio type)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub command: Option<Vec<String>>,
@@ -123,6 +126,95 @@ pub struct McpServerConfig {
     /// Environment variables
     #[serde(default)]
     pub env: std::collections::HashMap<String, String>,
+    /// HTTP headers (for HTTP type)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub headers: Option<std::collections::HashMap<String, String>>,
+}
+
+fn default_enabled() -> bool {
+    true
+}
+
+impl McpServerConfig {
+    /// Create a new stdio MCP server config
+    pub fn new_stdio(name: impl Into<String>, command: Vec<String>) -> Self {
+        Self {
+            name: name.into(),
+            server_type: "stdio".to_string(),
+            enabled: true,
+            command: Some(command),
+            url: None,
+            env: std::collections::HashMap::new(),
+            headers: None,
+        }
+    }
+
+    /// Create a new HTTP MCP server config
+    pub fn new_http(name: impl Into<String>, url: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            server_type: "http".to_string(),
+            enabled: true,
+            command: None,
+            url: Some(url.into()),
+            env: std::collections::HashMap::new(),
+            headers: None,
+        }
+    }
+
+    /// Add an environment variable
+    pub fn with_env(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.env.insert(key.into(), value.into());
+        self
+    }
+
+    /// Add HTTP header
+    pub fn with_header(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.headers
+            .get_or_insert_with(std::collections::HashMap::new)
+            .insert(key.into(), value.into());
+        self
+    }
+
+    /// Set enabled status
+    pub fn with_enabled(mut self, enabled: bool) -> Self {
+        self.enabled = enabled;
+        self
+    }
+
+    /// Expand environment variables in command and env values
+    pub fn expand_env_vars(&self) -> Self {
+        let mut config = self.clone();
+
+        // Expand command args
+        if let Some(ref cmd) = config.command {
+            config.command = Some(cmd.iter().map(|arg| Self::expand_var(arg)).collect());
+        }
+
+        // Expand env values
+        config.env = config
+            .env
+            .iter()
+            .map(|(k, v)| (k.clone(), Self::expand_var(v)))
+            .collect();
+
+        config
+    }
+
+    fn expand_var(s: &str) -> String {
+        let mut result = s.to_string();
+        // Simple ${VAR} expansion
+        while let Some(start) = result.find("${") {
+            if let Some(end) = result[start..].find('}') {
+                let var_name = &result[start + 2..start + end];
+                let value = std::env::var(var_name).unwrap_or_default();
+                result.replace_range(start..start + end + 1, &value);
+            } else {
+                break;
+            }
+        }
+        result
+    }
 }
 
 /// Trait for MCP client implementations
@@ -192,17 +284,50 @@ mod tests {
 
     #[test]
     fn test_mcp_server_config() {
-        let config = McpServerConfig {
-            name: "test-server".to_string(),
-            server_type: "stdio".to_string(),
-            command: Some(vec!["mcp-server".to_string(), "--verbose".to_string()]),
-            url: None,
-            env: std::collections::HashMap::new(),
-        };
+        let config = McpServerConfig::new_stdio(
+            "test-server",
+            vec!["mcp-server".to_string(), "--verbose".to_string()],
+        );
 
         assert_eq!(config.name, "test-server");
         assert_eq!(config.server_type, "stdio");
+        assert!(config.enabled);
         assert!(config.command.is_some());
+        assert_eq!(config.command.as_ref().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn test_mcp_server_config_http() {
+        let config = McpServerConfig::new_http("http-server", "http://localhost:8080")
+            .with_header("Authorization", "Bearer token")
+            .with_enabled(false);
+
+        assert_eq!(config.name, "http-server");
+        assert_eq!(config.server_type, "http");
+        assert!(!config.enabled);
+        assert_eq!(config.url.as_ref().unwrap(), "http://localhost:8080");
+        assert!(config.headers.is_some());
+        assert_eq!(
+            config.headers.as_ref().unwrap().get("Authorization"),
+            Some(&"Bearer token".to_string())
+        );
+    }
+
+    #[test]
+    fn test_mcp_server_config_env_expansion() {
+        std::env::set_var("TEST_VAR", "test_value");
+
+        let config = McpServerConfig::new_stdio(
+            "test",
+            vec!["mcp-server".to_string(), "${TEST_VAR}".to_string()],
+        )
+        .with_env("KEY", "${TEST_VAR}");
+
+        let expanded = config.expand_env_vars();
+        assert_eq!(expanded.command.as_ref().unwrap()[1], "test_value");
+        assert_eq!(expanded.env.get("KEY"), Some(&"test_value".to_string()));
+
+        std::env::remove_var("TEST_VAR");
     }
 
     // Mock tool for testing
