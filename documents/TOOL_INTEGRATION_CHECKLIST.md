@@ -1,12 +1,19 @@
 # Bodhya Tool Integration - Quick Reference Checklist
 
 **Version**: 1.1
-**Status**: Phase 1 Complete, Phase 2 Week 3 Complete - Ready for MCP
-**Target**: v1.1 Release
+**Status**: ✅ Phase 1-3 COMPLETE (Phases 2.5 & 3 completed 2025-11-17)
+**Target**: v1.1 Release - Core Implementation Complete
 **Duration**: 6-7 weeks (revised: skip custom GitTool, use MCP)
 **Last Updated**: 2025-11-17
-**Scope Decision**: ✅ MCP extensibility (Phase 2.5) INCLUDED in v1.1
+**Scope Decision**: ✅ MCP extensibility (Phase 2.5) COMPLETE
 **Revised Approach**: ✅ Skip custom GitTool - use git via MCP server
+
+**Major Milestones Achieved:**
+- ✅ Phase 1: Tool Integration Foundation (Core types, CodeAgentTools, CLI flags)
+- ✅ Phase 2: Advanced Tools (EditTool, SearchTool)
+- ✅ Phase 2.5: MCP Extensibility (JSON-RPC 2.0, CLI management, dynamic tool loading)
+- ✅ Phase 3: Agentic Execution Loop (observe-retry-fix workflow)
+- 🎯 Total: **456 tests passing** | All quality gates passing
 
 ---
 
@@ -498,7 +505,40 @@ reqwest = "0.11"      # MCP - HTTP client (for HttpMcpClient)
 
 ## Current Status
 
-**Completed:**
+**🎉 v1.1 Core Implementation: COMPLETE (2025-11-17)**
+
+**Phase Completion Summary:**
+- ✅ **Phase 1 (Weeks 1-2)**: Tool Integration Foundation
+  - Core types (Tool, ToolRegistry, ExecutionLimits, AgentContext)
+  - CodeAgentTools wrapper with file I/O and cargo execution
+  - CLI integration (--working-dir, --execution-mode flags)
+  - 427 tests passing → foundation established
+
+- ✅ **Phase 2 (Week 3)**: Advanced Tool Capabilities
+  - EditTool (replace, patch, insert, delete operations)
+  - SearchTool (grep, recursive search, regex)
+  - 445 tests passing → advanced capabilities added
+
+- ✅ **Phase 2.5 (2025-11-17)**: MCP Extensibility
+  - JSON-RPC 2.0 protocol implementation
+  - StdioMcpClient with process spawning
+  - CLI tool management (bodhya tools add-mcp, remove-mcp, toggle, test)
+  - McpToolWrapper adapter pattern
+  - ToolRegistry MCP integration with dynamic loading
+  - 445 tests passing → extensibility architecture proven
+
+- ✅ **Phase 3 (2025-11-17)**: Agentic Execution Loop
+  - AgenticExecutor with observe-retry-fix workflow
+  - ErrorAnalyzer (categorizes Compilation, TestFailure, Runtime errors)
+  - CodeRefiner (generates fixes based on error analysis)
+  - ExecutionSummary tracking all retry attempts
+  - 456 tests passing → agentic capabilities enabled
+
+**What's Left:**
+- ⏭️ **Phase 2 Week 4**: Git Tool - SKIPPED (using git via MCP instead)
+- 📋 **Phase 4**: Polish & Documentation (optional - integration tests, guides, benchmarks)
+
+**Completed Earlier:**
 - ✅ Analysis of current state
 - ✅ Gap identification
 - ✅ Comprehensive plan created
@@ -506,10 +546,6 @@ reqwest = "0.11"      # MCP - HTTP client (for HttpMcpClient)
 - ✅ Tool integration checklist created
 - ✅ Tool extensibility design created
 - ✅ Implementation summary created
-- ✅ **Phase 1 Week 1: Core Types & Infrastructure - COMPLETE**
-- ✅ **Phase 1 Week 2: Agent & CLI Integration - COMPLETE**
-- ✅ **Phase 2 Week 3: Edit & Search Tools - COMPLETE**
-- ⏭️ **Phase 2 Week 4: Git Tool - SKIPPED** (using git via MCP instead)
 
 **Implementation Summary (as of 2025-11-17):**
 - ✅ ExecutionLimits added to AgentContext with defaults (3 max iterations, 20 file writes, 10 commands, 300s timeout)
