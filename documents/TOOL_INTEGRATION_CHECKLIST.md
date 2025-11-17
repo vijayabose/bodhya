@@ -3,8 +3,9 @@
 **Version**: 1.1
 **Status**: Phase 1 & 2 (Partial) Complete - In Progress
 **Target**: v1.1 Release
-**Duration**: 6-9 weeks (4 phases + optional MCP extensibility)
+**Duration**: 7-9 weeks (4 core phases + MCP extensibility phase)
 **Last Updated**: 2025-11-17
+**Scope Decision**: ✅ MCP extensibility (Phase 2.5) INCLUDED in v1.1
 
 ---
 
@@ -151,10 +152,26 @@
 
 ---
 
-## Phase 2.5: MCP Server Extensibility (Optional - Week 5)
+## Phase 2.5: MCP Server Extensibility (Week 5-6)
 
-> **Note**: This phase is optional and can be done in parallel with Phase 3, or deferred to v1.2.
-> It enables users to extend Bodhya with external tools via CLI without code changes.
+> **Status**: ✅ INCLUDED in v1.1 Release
+> **Timeline**: Can be implemented in parallel with Phase 3, or sequentially
+> **Purpose**: Enables users to extend Bodhya with external tools via CLI without code changes
+
+### Quick Summary
+
+**What MCP Extensibility Adds:**
+- 🔧 **CLI Tool Management**: `bodhya tools add-mcp`, `remove-mcp`, `list-mcp`, `test-mcp`
+- 🔌 **MCP Protocol Support**: Full JSON-RPC 2.0 stdio and HTTP MCP client
+- 📦 **External Tool Discovery**: Automatically discover tools from MCP servers
+- ⚙️ **Configuration-Driven**: No code changes needed - just YAML config
+- 🌐 **Ecosystem Integration**: Connect to GitHub MCP, Brave Search, filesystem servers, etc.
+
+**Key Benefits:**
+- Users can extend Bodhya without modifying source code
+- Plug into existing MCP ecosystem (20+ servers available)
+- Enable/disable external tools via CLI
+- Test MCP connections before using in production
 
 ### Configuration System
 
@@ -403,8 +420,8 @@ reqwest = "0.11"      # MCP - HTTP client (for HttpMcpClient)
 - [x] EditTool functional
 - [x] SearchTool functional
 - [ ] GitTool functional (pending Phase 2 Week 4)
-- [ ] MCP server integration working (optional, deferred)
-- [ ] External tools loadable via CLI (optional, deferred)
+- [ ] MCP server integration working (Phase 2.5 - INCLUDED in v1.1)
+- [ ] External tools loadable via CLI (Phase 2.5 - INCLUDED in v1.1)
 - [ ] End-to-end workflows complete (pending Phase 3 & 4)
 
 ### Quality
@@ -505,29 +522,36 @@ reqwest = "0.11"      # MCP - HTTP client (for HttpMcpClient)
 2. ✅ ~~Phase 2 Week 3 Complete~~
 3. ⏭️ **Implement GitTool (Phase 2 Week 4)** - status/diff/add/commit/push operations
 4. ⏭️ **Implement CodeAgent execution with tools (Phase 1 Week 2)** - actual file writing and test execution
-5. ⏭️ **Implement Agentic Execution Loop (Phase 3)** - observe-retry-fix workflow
-6. ⏭️ **Polish & Documentation (Phase 4)** - examples, guides, optimization
-7. 🤔 **Decide on MCP extensibility (Phase 2.5)** - defer to v1.2 or include in v1.1?
+5. ⏭️ **Implement MCP Server Extensibility (Phase 2.5)** - CLI tool management, MCP client, external tool loading
+6. ⏭️ **Implement Agentic Execution Loop (Phase 3)** - observe-retry-fix workflow
+7. ⏭️ **Polish & Documentation (Phase 4)** - examples, guides, optimization
+
+**Recommended Implementation Order:**
+- **Option C (Parallel Track)**: Implement Phase 2 Week 4 (GitTool), then Phase 2.5 (MCP) in parallel with Phase 3 (Agentic Loop)
+- **Estimated Timeline**: 7 weeks total (current + 5-6 more weeks)
+- **Target Completion**: Early 2025
 
 ## Implementation Options
 
-### Option A: Full Feature Set (6-9 weeks)
-Include all phases including MCP server extensibility
-- **Timeline**: 9 weeks
-- **Scope**: Phases 1-4 + Phase 2.5 (MCP)
-- **Outcome**: Complete tool integration with extensibility
+### ✅ Selected: Option C - Parallel Track (7 weeks)
+**DECISION**: Implement MCP extensibility in parallel with Phase 3
+- **Timeline**: 7 weeks total
+- **Scope**: All phases (1-4) + Phase 2.5 (MCP extensibility)
+- **Outcome**: Complete tool integration with external tool extensibility
+- **Approach**:
+  - Week 4: GitTool implementation
+  - Weeks 5-6: MCP extensibility (Phase 2.5) in parallel with Agentic Loop (Phase 3)
+  - Week 7: Polish & Documentation (Phase 4)
 
-### Option B: Core Features (6 weeks)
-Defer MCP to v1.2, focus on core tool integration
-- **Timeline**: 6 weeks
-- **Scope**: Phases 1-4 only
-- **Outcome**: Tool integration + agentic loop, defer MCP
+### Alternative Options (Not Selected)
 
-### Option C: Parallel Track (6-7 weeks)
-Implement MCP in parallel with Phase 3
-- **Timeline**: 7 weeks
-- **Scope**: Phases 1-4, with MCP during weeks 5-6
-- **Outcome**: Core + MCP, potentially faster completion
+**Option A: Full Feature Set Sequential (9 weeks)**
+- All phases implemented sequentially
+- More thorough but slower
+
+**Option B: Core Features Only (6 weeks)**
+- Defer MCP to v1.2
+- Faster initial release but incomplete extensibility story
 
 ---
 
