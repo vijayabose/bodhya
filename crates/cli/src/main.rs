@@ -9,7 +9,7 @@ use clap::{Parser, Subcommand};
 use std::process;
 
 use bodhya_cli::config_templates::{ConfigTemplate, Profile};
-use bodhya_cli::{history_cmd, init_cmd, models_cmd, run_cmd, serve_cmd};
+use bodhya_cli::{history_cmd, init_cmd, models_cmd, run_cmd, serve_cmd, tools_cmd};
 
 #[derive(Parser)]
 #[command(name = "bodhya")]
@@ -40,6 +40,10 @@ enum Commands {
     /// Model management commands
     #[command(subcommand)]
     Models(ModelsCommands),
+
+    /// Tool management commands
+    #[command(subcommand)]
+    Tools(ToolsCommands),
 
     /// Run a task
     Run {
@@ -95,6 +99,59 @@ enum ModelsCommands {
 }
 
 #[derive(Subcommand)]
+enum ToolsCommands {
+    /// List all available tools (builtin + MCP)
+    List,
+
+    /// List configured MCP servers
+    ListMcp,
+
+    /// Add a new MCP server
+    AddMcp {
+        /// Server name
+        name: String,
+
+        /// Server type (stdio or http)
+        #[arg(long, default_value = "stdio")]
+        server_type: String,
+
+        /// Command for stdio servers (e.g., "npx @modelcontextprotocol/server-git")
+        #[arg(long)]
+        command: Option<Vec<String>>,
+
+        /// URL for HTTP servers
+        #[arg(long)]
+        url: Option<String>,
+
+        /// Disable the server after adding
+        #[arg(long)]
+        disabled: bool,
+    },
+
+    /// Remove an MCP server
+    RemoveMcp {
+        /// Server name to remove
+        name: String,
+    },
+
+    /// Enable or disable an MCP server
+    ToggleMcp {
+        /// Server name
+        name: String,
+
+        /// Enable the server
+        #[arg(long)]
+        enable: bool,
+    },
+
+    /// Test connection to an MCP server
+    TestMcp {
+        /// Server name to test
+        name: String,
+    },
+}
+
+#[derive(Subcommand)]
 enum HistoryCommands {
     /// Show recent task execution history
     Show {
@@ -141,6 +198,20 @@ async fn main() {
             ModelsCommands::List => models_cmd::list_models(),
             ModelsCommands::Install { model_id } => models_cmd::install_model(&model_id),
             ModelsCommands::Remove { model_id } => models_cmd::remove_model(&model_id),
+        },
+        Commands::Tools(tools_cmd) => match tools_cmd {
+            ToolsCommands::List => tools_cmd::list_tools().await,
+            ToolsCommands::ListMcp => tools_cmd::list_mcp_servers(),
+            ToolsCommands::AddMcp {
+                name,
+                server_type,
+                command,
+                url,
+                disabled,
+            } => tools_cmd::add_mcp_server(name, server_type, command, url, !disabled),
+            ToolsCommands::RemoveMcp { name } => tools_cmd::remove_mcp_server(name),
+            ToolsCommands::ToggleMcp { name, enable } => tools_cmd::toggle_mcp_server(name, enable),
+            ToolsCommands::TestMcp { name } => tools_cmd::test_mcp_server(name).await,
         },
         Commands::Run {
             domain,
