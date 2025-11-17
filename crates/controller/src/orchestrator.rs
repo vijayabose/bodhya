@@ -42,6 +42,38 @@ impl TaskOrchestrator {
         }
     }
 
+    /// Create a new orchestrator and load MCP servers from configuration
+    ///
+    /// This is a convenience method that creates the orchestrator and
+    /// immediately loads MCP servers from the configuration.
+    pub async fn new_with_mcp(config: AppConfig) -> bodhya_core::Result<Self> {
+        let mut orchestrator = Self::new(config);
+        orchestrator.load_mcp_servers().await?;
+        Ok(orchestrator)
+    }
+
+    /// Load MCP servers from configuration
+    ///
+    /// This should be called after creating the orchestrator to connect to
+    /// configured MCP servers and register their tools.
+    pub async fn load_mcp_servers(&mut self) -> bodhya_core::Result<()> {
+        // Get mutable access to tools
+        let tools = Arc::get_mut(&mut self.tools)
+            .ok_or_else(|| bodhya_core::Error::Tool(
+                "Cannot load MCP servers: ToolRegistry has multiple references".to_string()
+            ))?;
+
+        // Load MCP servers from config
+        tools.load_mcp_servers(&self.config.tools.mcp_servers).await?;
+
+        tracing::info!(
+            "Loaded {} MCP servers from configuration",
+            self.config.tools.mcp_servers.len()
+        );
+
+        Ok(())
+    }
+
     /// Create a new orchestrator with custom tools
     pub fn with_tools(config: AppConfig, tools: Arc<ToolRegistry>) -> Self {
         let engagement = EngagementManager::new(config.engagement_mode.clone());

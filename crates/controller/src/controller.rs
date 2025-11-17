@@ -24,6 +24,49 @@ impl Controller {
         Self { orchestrator }
     }
 
+    /// Create a new controller with given agents and load MCP servers
+    ///
+    /// This creates a controller with the default configuration and loads
+    /// MCP servers from that configuration.
+    pub async fn new_with_mcp(agents: Vec<Arc<dyn Agent>>) -> bodhya_core::Result<Self> {
+        let config = AppConfig::default();
+        let mut orchestrator = TaskOrchestrator::new_with_mcp(config).await?;
+
+        // Register all agents
+        for agent in agents {
+            orchestrator.router_mut().register(agent);
+        }
+
+        Ok(Self { orchestrator })
+    }
+
+    /// Create a new controller with custom configuration and agents
+    pub fn with_config(config: AppConfig, agents: Vec<Arc<dyn Agent>>) -> Self {
+        let mut orchestrator = TaskOrchestrator::new(config);
+
+        // Register all agents
+        for agent in agents {
+            orchestrator.router_mut().register(agent);
+        }
+
+        Self { orchestrator }
+    }
+
+    /// Create a new controller with custom configuration, load MCP servers, and register agents
+    pub async fn with_config_and_mcp(
+        config: AppConfig,
+        agents: Vec<Arc<dyn Agent>>,
+    ) -> bodhya_core::Result<Self> {
+        let mut orchestrator = TaskOrchestrator::new_with_mcp(config).await?;
+
+        // Register all agents
+        for agent in agents {
+            orchestrator.router_mut().register(agent);
+        }
+
+        Ok(Self { orchestrator })
+    }
+
     /// Execute a task
     pub async fn execute(&self, task: Task) -> bodhya_core::Result<AgentResult> {
         self.orchestrator.execute(task).await
@@ -129,5 +172,33 @@ mod tests {
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap().content, "test result");
+    }
+
+    #[tokio::test]
+    async fn test_controller_with_config() {
+        let agent = Arc::new(TestAgent {
+            id: "test",
+            domain: "test".to_string(),
+        }) as Arc<dyn Agent>;
+
+        let config = AppConfig::default();
+        let controller = Controller::with_config(config, vec![agent]);
+
+        assert_eq!(controller.list_agents().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_controller_with_mcp() {
+        let agent = Arc::new(TestAgent {
+            id: "test",
+            domain: "test".to_string(),
+        }) as Arc<dyn Agent>;
+
+        // Create controller with MCP support (won't connect to any servers without config)
+        let result = Controller::new_with_mcp(vec![agent]).await;
+        assert!(result.is_ok());
+
+        let controller = result.unwrap();
+        assert_eq!(controller.list_agents().len(), 1);
     }
 }

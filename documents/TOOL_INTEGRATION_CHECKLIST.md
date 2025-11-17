@@ -249,10 +249,14 @@
 - [x] Write integration tests
 
 **Controller Integration** (`crates/controller/`)
-- [ ] Load MCP servers when creating `ToolRegistry` (pending)
-- [ ] Pass MCP tools to `AgentContext` (pending)
-- [ ] Add MCP connection status to metrics (future)
-- [ ] Handle MCP server failures gracefully (basic error handling in place)
+- [x] Load MCP servers when creating `ToolRegistry`
+  - [x] Add `load_mcp_servers()` method to `TaskOrchestrator`
+  - [x] Add `new_with_mcp()` convenience method to `TaskOrchestrator`
+  - [x] Add `new_with_mcp()` and `with_config_and_mcp()` to `Controller`
+  - [x] Write integration tests
+- [x] Pass MCP tools to `AgentContext` (already implemented via ToolRegistry)
+- [ ] Add MCP connection status to metrics (future enhancement)
+- [x] Handle MCP server failures gracefully (error logging in ToolRegistry)
 
 ### Testing & Documentation
 
