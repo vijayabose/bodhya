@@ -10,6 +10,7 @@ mod edit_tool;
 mod fs_tool;
 mod json_rpc;
 mod mcp_client;
+mod mcp_tool_wrapper;
 mod search_tool;
 mod shell_tool;
 mod stdio_mcp_client;
@@ -19,19 +20,28 @@ pub use edit_tool::{EditOperation, EditResult, EditTool};
 pub use fs_tool::FilesystemTool;
 pub use json_rpc::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, RequestId};
 pub use mcp_client::BasicMcpClient;
+pub use mcp_tool_wrapper::McpToolWrapper;
 pub use search_tool::{SearchMatch, SearchResult, SearchTool};
 pub use shell_tool::ShellTool;
 pub use stdio_mcp_client::StdioMcpClient;
 
+use std::sync::Arc;
+use tokio::sync::Mutex;
+
 /// Tool registry for managing available tools
 pub struct ToolRegistry {
     tools: Vec<Box<dyn Tool>>,
+    /// MCP clients (shared across tools from same server)
+    mcp_clients: Vec<Arc<Mutex<Box<dyn McpClient>>>>,
 }
 
 impl ToolRegistry {
     /// Create a new empty tool registry
     pub fn new() -> Self {
-        Self { tools: Vec::new() }
+        Self {
+            tools: Vec::new(),
+            mcp_clients: Vec::new(),
+        }
     }
 
     /// Create a tool registry with default tools (filesystem, shell, edit, search)
@@ -42,6 +52,60 @@ impl ToolRegistry {
         registry.register(Box::new(EditTool::new()));
         registry.register(Box::new(SearchTool::new()));
         registry
+    }
+
+    /// Load MCP servers from configuration and register their tools
+    pub async fn load_mcp_servers(
+        &mut self,
+        servers: &[McpServerConfig],
+    ) -> bodhya_core::Result<()> {
+        for server in servers {
+            if !server.enabled {
+                continue;
+            }
+
+            // Create and connect client
+            let mut client: Box<dyn McpClient> = Box::new(StdioMcpClient::new());
+
+            match client.connect(server).await {
+                Ok(_) => {
+                    // List tools from server
+                    match client.list_tools().await {
+                        Ok(tools) => {
+                            // Wrap client in Arc<Mutex> for sharing
+                            let client_arc = Arc::new(Mutex::new(client));
+
+                            // Register each tool
+                            for tool_name in tools {
+                                let wrapper = McpToolWrapper::new(
+                                    tool_name,
+                                    client_arc.clone(),
+                                    server.name.clone(),
+                                );
+                                self.register(Box::new(wrapper));
+                            }
+
+                            // Store client reference
+                            self.mcp_clients.push(client_arc);
+                        }
+                        Err(e) => {
+                            eprintln!(
+                                "Warning: Failed to list tools from MCP server '{}': {}",
+                                server.name, e
+                            );
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!(
+                        "Warning: Failed to connect to MCP server '{}': {}",
+                        server.name, e
+                    );
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// Register a tool
@@ -69,6 +133,16 @@ impl ToolRegistry {
         })?;
 
         tool.execute(request).await
+    }
+
+    /// Disconnect all MCP clients
+    pub async fn disconnect_all(&mut self) -> bodhya_core::Result<()> {
+        for client in &self.mcp_clients {
+            let mut client_guard = client.lock().await;
+            let _ = client_guard.disconnect().await; // Ignore errors
+        }
+        self.mcp_clients.clear();
+        Ok(())
     }
 }
 
