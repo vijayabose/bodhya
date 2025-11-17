@@ -113,36 +113,114 @@ impl CodeAgent {
     }
 
     /// Execute task with tools (Phase 8)
-    /// Demonstrates agentic code generation with file operations
+    /// Full agentic code generation with file operations and test execution
     async fn execute_with_tools(&self, task: &Task, tools: &CodeAgentTools) -> Result<String> {
-        // Simple demonstration: Create a basic Rust project structure
         let mut output = String::new();
         output.push_str(&format!("# Executing: {}\n\n", task.description));
-        output.push_str("## Tool-Based Execution\n\n");
 
-        // Example: Check if Cargo.toml exists
-        match tools.file_exists("Cargo.toml").await {
-            Ok(exists) => {
-                if exists {
-                    output.push_str("✓ Found existing Cargo.toml\n");
+        // Require model registry for code generation
+        let registry = self.registry.as_ref().ok_or_else(|| {
+            bodhya_core::Error::Config(
+                "Model registry required for tool-based execution".to_string(),
+            )
+        })?;
 
-                    // Read it
-                    match tools.read_file("Cargo.toml").await {
-                        Ok(content) => {
-                            let lines: Vec<&str> = content.lines().take(5).collect();
-                            output.push_str("```toml\n");
-                            output.push_str(&lines.join("\n"));
-                            output.push_str("\n...\n```\n\n");
-                        }
-                        Err(e) => {
-                            output.push_str(&format!("⚠ Could not read Cargo.toml: {}\n\n", e))
-                        }
-                    }
-                } else {
-                    output.push_str("ℹ No Cargo.toml found in working directory\n\n");
+        output.push_str("## Step 1: Planning\n\n");
+        let planner = Planner::new(Arc::clone(registry))?;
+        let plan = planner.plan(&task.description).await?;
+        output.push_str(&format!("**Purpose**: {}\n", plan.purpose));
+        if !plan.components.is_empty() {
+            output.push_str("**Components**: ");
+            output.push_str(&plan.components.join(", "));
+            output.push('\n');
+        }
+        output.push('\n');
+
+        output.push_str("## Step 2: Generating BDD Features\n\n");
+        let bdd_generator = BddGenerator::new(Arc::clone(registry))?;
+        let feature = bdd_generator.generate(&task.description, &plan).await?;
+        output.push_str(&format!(
+            "Feature: {} ({} scenarios)\n\n",
+            feature.name,
+            feature.scenarios.len()
+        ));
+
+        output.push_str("## Step 3: Generating Tests (RED Phase)\n\n");
+        let tdd_generator = TddGenerator::new(Arc::clone(registry))?;
+        let test_code = tdd_generator.generate(&feature, &plan).await?;
+        output.push_str(&format!("Generated {} test(s)\n\n", test_code.test_count));
+
+        output.push_str("## Step 4: Generating Implementation (GREEN Phase)\n\n");
+        let impl_generator = ImplGenerator::new(Arc::clone(registry))?;
+        let impl_code = impl_generator.generate(&test_code, &feature, &plan).await?;
+        output.push_str(&format!("Generated {} lines of code\n\n", impl_code.loc));
+
+        output.push_str("## Step 5: Writing Files to Disk\n\n");
+
+        // Determine file paths based on task description
+        let (test_path, impl_path) = self.determine_file_paths(&task.description);
+
+        // Write test file
+        match tools.write_file(&test_path, &test_code.code).await {
+            Ok(_) => output.push_str(&format!("✓ Wrote test file: {}\n", test_path)),
+            Err(e) => {
+                output.push_str(&format!("✗ Failed to write test file: {}\n", e));
+                return Err(e);
+            }
+        }
+
+        // Write implementation file
+        match tools.write_file(&impl_path, &impl_code.code).await {
+            Ok(_) => output.push_str(&format!("✓ Wrote implementation file: {}\n\n", impl_path)),
+            Err(e) => {
+                output.push_str(&format!("✗ Failed to write implementation file: {}\n", e));
+                return Err(e);
+            }
+        }
+
+        output.push_str("## Step 6: Running Tests\n\n");
+
+        // Execute cargo test
+        let test_result = tools.run_cargo("test", &[]).await?;
+
+        if test_result.success {
+            output.push_str("✓ Tests PASSED\n\n");
+            output.push_str("```\n");
+            // Show last 10 lines of output
+            let stdout_lines: Vec<&str> = test_result.stdout.lines().collect();
+            let start = stdout_lines.len().saturating_sub(10);
+            output.push_str(&stdout_lines[start..].join("\n"));
+            output.push_str("\n```\n\n");
+
+            // Step 7: Review the code
+            output.push_str("## Step 7: Code Review\n\n");
+            let reviewer = CodeReviewer::new(Arc::clone(registry))?;
+            let review = reviewer.review(&impl_code, &plan, "Tests passed").await?;
+
+            match review.status {
+                ReviewStatus::Approved => output.push_str("✓ Code review: APPROVED\n"),
+                ReviewStatus::NeedsMinorChanges => {
+                    output.push_str("✓ Code review: APPROVED (minor changes suggested)\n")
+                }
+                ReviewStatus::NeedsMajorChanges => {
+                    output.push_str("⚠ Code review: MAJOR CHANGES NEEDED\n")
                 }
             }
-            Err(e) => output.push_str(&format!("⚠ Error checking for Cargo.toml: {}\n\n", e)),
+
+            if !review.suggestions.is_empty() {
+                output.push_str(&format!("\nSuggestions ({}):\n", review.suggestions.len()));
+                for (i, suggestion) in review.suggestions.iter().take(3).enumerate() {
+                    output.push_str(&format!("{}. {}\n", i + 1, suggestion.issue));
+                }
+            }
+            output.push('\n');
+        } else {
+            output.push_str("✗ Tests FAILED\n\n");
+            output.push_str("```\n");
+            output.push_str(&test_result.stderr);
+            output.push_str("\n```\n\n");
+            output.push_str("*Note: Agentic retry loop not yet implemented. ");
+            output.push_str("This will be added in Phase 3.*\n\n");
         }
 
         // Get execution statistics
@@ -154,12 +232,31 @@ impl CodeAgent {
             "- Commands executed: {}\n",
             stats.commands_executed
         ));
-        output.push_str(&format!("- Bytes read: {}\n", stats.bytes_read));
-
-        output.push_str("\n*Note: This is a demonstration of tool integration. ");
-        output.push_str("Full agentic code generation will be implemented in future phases.*\n");
+        output.push_str(&format!("- Bytes written: {} bytes\n", stats.bytes_written));
 
         Ok(output)
+    }
+
+    /// Determine file paths for test and implementation based on task description
+    fn determine_file_paths(&self, description: &str) -> (String, String) {
+        // Simple heuristic: extract potential module name from description
+        let desc_lower = description.to_lowercase();
+
+        // Check for common patterns
+        let module_name = if desc_lower.contains("fibonacci") {
+            "fibonacci"
+        } else if desc_lower.contains("factorial") {
+            "factorial"
+        } else if desc_lower.contains("hello") || desc_lower.contains("world") {
+            "hello"
+        } else {
+            "generated"
+        };
+
+        let test_path = format!("tests/{}_test.rs", module_name);
+        let impl_path = format!("src/{}.rs", module_name);
+
+        (test_path, impl_path)
     }
 
     /// Generate code using full TDD pipeline (Phase 7)
@@ -449,18 +546,18 @@ mod tests {
             .with_execution_limits(ExecutionLimits::default())
             .with_tools(tools as Arc<dyn std::any::Any + Send + Sync>);
 
-        // Create agent
+        // Create agent WITHOUT model registry - should fall back
         let agent = CodeAgent::new();
         let task = Task::new("Test tool integration");
 
-        // Execute with tools
+        // Execute with tools - will fall back to model-based since no registry
         let result = agent.handle(task, ctx).await;
         assert!(result.is_ok());
 
         let agent_result = result.unwrap();
         assert!(agent_result.success);
-        assert!(agent_result.content.contains("Tool-Based Execution"));
-        assert!(agent_result.content.contains("Execution Statistics"));
+        // Without registry, falls back to static output
+        assert!(agent_result.content.contains("Hello, World!"));
     }
 
     #[tokio::test]
@@ -482,41 +579,27 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_code_agent_tools_read_cargo_toml() {
-        use bodhya_core::ExecutionLimits;
-        use bodhya_tools_mcp::ToolRegistry;
-        use std::path::PathBuf;
-
-        // Use the actual project directory (workspace root)
-        let project_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .to_path_buf();
-
-        // Create tools and context pointing to project root
-        let tools = Arc::new(ToolRegistry::with_defaults());
-        let ctx = AgentContext::new(Default::default())
-            .with_working_dir(project_root)
-            .with_execution_limits(ExecutionLimits::default())
-            .with_tools(tools as Arc<dyn std::any::Any + Send + Sync>);
-
-        // Create agent
+    async fn test_determine_file_paths() {
         let agent = CodeAgent::new();
-        let task = Task::new("Analyze project");
 
-        // Execute with tools
-        let result = agent.handle(task, ctx).await;
-        assert!(result.is_ok());
+        // Test fibonacci pattern
+        let (test_path, impl_path) = agent.determine_file_paths("Generate fibonacci function");
+        assert_eq!(test_path, "tests/fibonacci_test.rs");
+        assert_eq!(impl_path, "src/fibonacci.rs");
 
-        let agent_result = result.unwrap();
-        assert!(agent_result.success);
-        assert!(agent_result.content.contains("Tool-Based Execution"));
-        // Should find and read Cargo.toml from project root
-        assert!(
-            agent_result.content.contains("Cargo.toml")
-                || agent_result.content.contains("workspace")
-        );
+        // Test hello world pattern
+        let (test_path, impl_path) = agent.determine_file_paths("hello world program");
+        assert_eq!(test_path, "tests/hello_test.rs");
+        assert_eq!(impl_path, "src/hello.rs");
+
+        // Test factorial pattern
+        let (test_path, impl_path) = agent.determine_file_paths("Write a factorial calculator");
+        assert_eq!(test_path, "tests/factorial_test.rs");
+        assert_eq!(impl_path, "src/factorial.rs");
+
+        // Test default pattern
+        let (test_path, impl_path) = agent.determine_file_paths("Some random task");
+        assert_eq!(test_path, "tests/generated_test.rs");
+        assert_eq!(impl_path, "src/generated.rs");
     }
 }
