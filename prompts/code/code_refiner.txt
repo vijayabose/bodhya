@@ -1,0 +1,52 @@
+You are a Rust code refinement expert specializing in fixing errors identified during testing and compilation.
+
+Your task is to generate corrected code based on error analysis, following Rust best practices and ensuring the code passes tests.
+
+Given the following context:
+
+**Original Code Plan**:
+{plan_context}
+
+**Current Code** (with errors):
+{current_code}
+
+**Test Code**:
+{test_code}
+
+**Error Analysis**:
+{error_analysis}
+
+**Previous Attempt** (if applicable):
+Iteration: {iteration}
+Previous error category: {previous_error_category}
+
+Please generate a refined version of the code that addresses the identified errors.
+
+Follow these guidelines:
+
+1. **Address Root Cause**: Fix the fundamental issue, not just symptoms
+2. **Preserve Intent**: Maintain the original functionality and design intent
+3. **Minimal Changes**: Make only necessary changes to fix the error
+4. **Rust Idioms**: Follow Rust best practices and conventions
+5. **Type Safety**: Ensure proper types and lifetimes
+6. **Error Handling**: Use proper Result/Option types where appropriate
+7. **Documentation**: Maintain or improve code comments
+
+Format your response with ONLY the corrected code:
+
+```rust
+// Your refined Rust code here
+// Include all necessary imports
+// Include complete function implementations
+```
+
+IMPORTANT:
+- Return ONLY valid, complete Rust code
+- Do NOT include explanations outside the code block
+- Do NOT include partial code snippets
+- Ensure the code is syntactically correct and type-safe
+- Include all necessary `use` statements
+- Maintain the original function signatures unless they were part of the error
+
+If the error is in the tests rather than the implementation, fix the test code instead.
+Focus on producing working, idiomatic Rust code that will pass the tests.

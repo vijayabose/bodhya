@@ -312,10 +312,12 @@
 - [x] Write mode switching tests (via existing integration tests)
 
 **Prompts for Agentic Behavior**
-- [ ] Create `prompts/code/coder_with_tools.txt` (future - using heuristics for now)
-- [ ] Create `prompts/code/error_analyzer.txt` (future - using pattern matching)
+- [x] Create `prompts/code/error_analyzer.txt` (LLM-based error analysis)
+- [x] Create `prompts/code/code_refiner.txt` (LLM-based code refinement)
+- [x] Integrate prompts into ErrorAnalyzer with fallback to heuristics
+- [x] Integrate prompts into CodeRefiner with fallback to heuristics
+- [ ] Test prompts with real error scenarios (future - requires live models)
 - [ ] Update `prompts/code/reviewer.txt` (future enhancement)
-- [ ] Test prompts with samples (pending)
 
 **Configuration**
 - [x] `ExecutionMode` enum already in config (GenerateOnly, Execute, ExecuteWithRetry)
