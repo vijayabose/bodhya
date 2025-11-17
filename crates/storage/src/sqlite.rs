@@ -366,8 +366,8 @@ impl SqliteStorage {
             .conn
             .prepare(
                 "SELECT COUNT(*),
-                        SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END),
-                        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END)
+                        COALESCE(SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END), 0),
+                        COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0)
                  FROM tasks WHERE domain = ?1",
             )
             .map_err(|e| bodhya_core::Error::Io(format!("Failed to prepare query: {}", e)))?;

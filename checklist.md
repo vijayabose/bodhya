@@ -385,7 +385,7 @@ Before considering implementation complete, verify:
 - [x] CodeAgent achieves ≥85/100 quality score (evaluation harness implemented)
 - [x] MailAgent achieves ≥4.5/5 user rating (evaluation harness implemented)
 - [x] Test coverage ≥80% for code agent crate (~80% coverage achieved)
-- [x] `scripts/check_all.sh` passes with 0 warnings (369 tests passing, zero warnings)
+- [x] `scripts/check_all.sh` passes with 0 warnings (458 tests passing, zero warnings)
 - [x] Can add new domain agent with just 1 crate + config entry (architecture proven)
 - [x] Installer works on Linux, macOS, Windows (scripts created for all platforms)
 - [x] All models download on-demand with proper checksums (SHA256 verification implemented)
@@ -402,7 +402,7 @@ Legend: ⬜ Not Started | 🔄 In Progress | ✅ Complete
 
 **Achievement Summary**:
 - ✅ Phases 1-14 completed
-- ✅ 369 tests passing
+- ✅ 458 tests passing
 - ✅ ~80% code coverage
 - ✅ Zero compiler warnings
 - ✅ Complete documentation suite

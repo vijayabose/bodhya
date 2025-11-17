@@ -1,8 +1,9 @@
 # Bodhya
 
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]()
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Tests](https://img.shields.io/badge/tests-369%20passing-brightgreen.svg)]()
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
+[![Tests](https://img.shields.io/badge/tests-458%20passing-brightgreen.svg)]()
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Bodhya** is a local-first, multi-agent AI platform that intelligently routes tasks to specialized domain agents. Built in Rust for performance and reliability, Bodhya prioritizes privacy by running AI models locally on your hardware, with optional remote model integration when configured.
 
@@ -229,17 +230,17 @@ Scores emails on:
 
 | Component | Status | Tests | Coverage |
 |-----------|--------|-------|----------|
-| Core Abstractions | ✅ Complete | 46 | High |
+| Core Abstractions | ✅ Complete | 65 | High |
 | Model Registry | ✅ Complete | 46 | High |
-| Controller | ✅ Complete | 40 | High |
-| CLI | ✅ Complete | 44 | Medium |
-| CodeAgent | ✅ Complete | 60 | High |
+| Controller | ✅ Complete | 44 | High |
+| CLI | ✅ Complete | 63 | Medium |
+| CodeAgent | ✅ Complete | 80 | High |
 | MailAgent | ✅ Complete | 30 | High |
-| Tools/MCP | ✅ Complete | 34 | High |
+| Tools/MCP | ✅ Complete | 67 | High |
 | Storage | ✅ Complete | 25 | High |
 | API Server | ✅ Complete | 19 | Medium |
 | Evaluation | ✅ Complete | 34 | High |
-| **Total** | **✅** | **369** | **~80%** |
+| **Total** | **✅** | **458** | **~80%** |
 
 ## 🛠️ Development
 
