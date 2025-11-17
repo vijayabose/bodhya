@@ -1,4 +1,4 @@
-pub use agent::{Agent, AgentCapability, AgentContext, AgentResult, Task};
+pub use agent::{Agent, AgentCapability, AgentContext, AgentResult, ExecutionLimits, Task};
 pub use config::{AgentConfig, AppConfig, LoggingConfig, ModelConfigs, PathsConfig};
 /// Bodhya Core Library
 ///
