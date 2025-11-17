@@ -99,6 +99,7 @@ impl ConfigTemplate {
             engagement_mode: EngagementMode::Minimum,
             agents,
             models: Default::default(),
+            tools: Default::default(),
             paths: PathsConfig::default(),
             logging: LoggingConfig::default(),
         }

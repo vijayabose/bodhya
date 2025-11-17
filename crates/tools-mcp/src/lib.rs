@@ -8,16 +8,20 @@ pub use bodhya_core::{McpClient, McpServerConfig, Tool, ToolRequest, ToolRespons
 
 mod edit_tool;
 mod fs_tool;
+mod json_rpc;
 mod mcp_client;
 mod search_tool;
 mod shell_tool;
+mod stdio_mcp_client;
 
 // Re-export tool implementations
 pub use edit_tool::{EditOperation, EditResult, EditTool};
 pub use fs_tool::FilesystemTool;
+pub use json_rpc::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, RequestId};
 pub use mcp_client::BasicMcpClient;
 pub use search_tool::{SearchMatch, SearchResult, SearchTool};
 pub use shell_tool::ShellTool;
+pub use stdio_mcp_client::StdioMcpClient;
 
 /// Tool registry for managing available tools
 pub struct ToolRegistry {

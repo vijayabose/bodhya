@@ -80,16 +80,9 @@ impl McpClient for BasicMcpClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
 
     fn create_test_config() -> McpServerConfig {
-        McpServerConfig {
-            name: "test-server".to_string(),
-            server_type: "stdio".to_string(),
-            command: Some(vec!["test-mcp-server".to_string()]),
-            url: None,
-            env: HashMap::new(),
-        }
+        McpServerConfig::new_stdio("test-server", vec!["test-mcp-server".to_string()])
     }
 
     #[tokio::test]
